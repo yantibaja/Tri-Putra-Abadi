@@ -497,6 +497,7 @@
                     nominal: nominal,
                     jenis_tenor: jenisTenor,
                     lama_tenor: lamaTenor,
+                    tenor_bulan: lamaTenor, // Menyesuaikan kolom database Anda yang wajib diisi
                     total_angsuran_keseluruhan: totalKembali,
                     nominal_cicilan_per_tempo: cicilanPerTempo,
                     total_fee_diterima: totalFee,
@@ -527,12 +528,6 @@
             } catch (err) {
                 alert('Gagal mengajukan pinjaman: ' + err.message);
             }
-        }
-
-        async function approvePinjaman(id, status) {
-            await _supabase.from('pinjaman').update({ status: status }).eq('id', id);
-            alert(`Pinjaman berhasil di-${status}!`);
-            loadOwnerView('approve');
         }
 
         async function updateKoperasiSettings(e) {

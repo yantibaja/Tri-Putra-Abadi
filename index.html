@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Koperasi Modern</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-950 via-slate-900 to-black min-h-screen text-white flex items-center justify-center p-4">
+
+    <div class="max-w-xl w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8">
+        
+        <!-- HEADER / NAVIGASI TAB DENGAN LOGO -->
+        <div id="main-header" class="flex flex-wrap justify-between items-center mb-6 border-b border-white/10 pb-4 gap-2">
+            <div class="flex items-center space-x-3">
+                <!-- LOGO KOPERASI -->
+                <img src="30755_272e4a.png" alt="Logo Koperasi Harian" class="w-10 h-10 rounded-full object-cover border border-white/20 shadow-md">
+                <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Koperasi Harian</h1>
+            </div>
+            <div id="nav-buttons" class="flex space-x-1">
+                <button onclick="switchTab('login')" id="btn-login" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition">Login</button>
+                <button onclick="switchTab('owner')" id="btn-owner" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/20 transition">Daftar Koperasi</button>
+                <button onclick="switchTab('register')" id="btn-register" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/20 transition">Daftar Nasabah</button>
+            </div>
+        </div>
+
+        <!-- 0. DASHBOARD UTAMA (MUNCUL SETELAH LOGIN) -->
+        <div id="dashboard-container" class="hidden text-center py-6">
+            <div class="w-20 h-20 bg-indigo-500/20 border border-indigo-500/50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">👤</div>
+            <h2 id="dash-nama" class="text-2xl font-extrabold mb-1">Memuat Nama...</h2>
+            <p id="dash-role" class="text-indigo-400 font-semibold text-sm mb-4 uppercase tracking-wider">-</p>
+            <div id="dash-info" class="bg-black/40 border border-white/10 rounded-2xl p-4 text-left text-sm text-slate-300 mb-6 space-y-2">
+                <!-- Info detail profil dimuat di sini -->
+            </div>
+            <button onclick="handleLogout()" class="w-full py-3.5 bg-rose-600 hover:bg-rose-700 font-bold rounded-xl shadow-lg transition">Keluar Akun (Logout)</button>
+        </div>
+
+        <!-- 1. FORM LOGIN -->
+        <div id="form-login-container">
+            <h2 class="text-2xl font-extrabold mb-2">Login Pengguna</h2>
+            <p class="text-slate-400 text-sm mb-6">Masuk menggunakan Email/NIK terdaftar</p>
+            
+            <div id="login-alert" class="hidden mb-4 p-3 bg-rose-500/20 border border-rose-500 text-rose-200 text-sm rounded-xl text-center"></div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email / NIK</label>
+                    <input type="text" id="login-email" required placeholder="Masukkan NIK atau Email Anda" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="password" id="login-password" required placeholder="••••••••" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-white">
+                </div>
+                <button type="submit" id="btn-login-submit" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 font-bold rounded-xl shadow-lg transition">Masuk Aplikasi</button>
+            </form>
+        </div>
+
+        <!-- 2. FORM PENDAFTARAN PEMILIK KOPERASI (ADMIN) -->
+        <div id="form-owner-container" class="hidden">
+            <h2 class="text-2xl font-extrabold mb-2">Daftarkan Koperasi & Admin</h2>
+            <p class="text-slate-400 text-sm mb-6">Form khusus Pemilik Koperasi untuk mendaftarkan badan usaha</p>
+
+            <form onsubmit="handleRegisterOwner(event)" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Lengkap Pemilik *</label>
+                    <input type="text" id="owner-nama" required placeholder="Nama lengkap sesuai identitas" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">NIK Pemilik (16 Digit) *</label>
+                    <input type="text" id="owner-nik" required maxlength="16" placeholder="16 digit angka NIK pemilik" oninput="checkNikOwner(this)" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none tracking-widest text-white">
+                    <p id="owner-nik-warning" class="text-rose-400 text-xs mt-1 hidden">NIK pemilik harus tepat 16 digit angka!</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Koperasi *</label>
+                    <input type="text" id="owner-nama-koperasi" required placeholder="Contoh: Koperasi Maju Bersama" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Alamat Kantor *</label>
+                    <textarea id="owner-alamat-koperasi" required rows="2" placeholder="Alamat lengkap kantor koperasi" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Upload Logo Koperasinya *</label>
+                    <input type="file" id="owner-logo" accept="image/*" required class="w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                </div>
+                <hr class="border-white/10 my-2">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email Admin (Untuk Login) *</label>
+                    <input type="email" id="owner-email" required placeholder="admin@koperasi.com" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password Akun *</label>
+                    <input type="password" id="owner-password" required placeholder="Buat password rahasia" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <button type="submit" id="btn-owner-submit" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 font-bold rounded-xl shadow-lg transition">Daftarkan Koperasi</button>
+            </form>
+        </div>
+
+        <!-- 3. FORM REGISTER NASABAH -->
+        <div id="form-register-container" class="hidden">
+            <h2 class="text-2xl font-extrabold mb-2">Pendaftaran Nasabah</h2>
+            <p class="text-slate-400 text-sm mb-6">Lengkapi data diri sesuai KTP dengan benar</p>
+
+            <form onsubmit="handleRegisterNasabah(event)" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Pilih Koperasi Tujuan *</label>
+                    <select id="reg-koperasi" required class="w-full px-4 py-3 bg-slate-900 border border-white/20 rounded-xl outline-none text-white">
+                        <option value="">-- Memuat Data Koperasi --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Lengkap Sesuai KTP *</label>
+                    <input type="text" id="reg-nama" required placeholder="Nama lengkap" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">NIK (Wajib 16 Digit) *</label>
+                    <input type="text" id="reg-nik" required maxlength="16" placeholder="16 digit NIK" oninput="checkNik(this)" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none tracking-widest text-white">
+                    <p id="nik-warning" class="text-rose-400 text-xs mt-1 hidden">NIK harus tepat 16 digit angka!</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Alamat Lengkap *</label>
+                    <textarea id="reg-alamat" required rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nomor HP/WA Aktif *</label>
+                    <input type="tel" id="reg-hp" required placeholder="08xxxxxxxxxx" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Jenis Penghasilan *</label>
+                        <select id="reg-jenis-penghasilan" class="w-full px-4 py-3 bg-slate-900 border border-white/20 rounded-xl outline-none text-white">
+                            <option value="Punya usaha">Punya Usaha</option>
+                            <option value="Kerja">Kerja / Karyawan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Detail Usaha/Kerja *</label>
+                        <input type="text" id="reg-detail-penghasilan" required placeholder="Contoh: Toko Sembako" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Alamat Usaha atau Tempat Kerja *</label>
+                    <input type="text" id="reg-alamat-usaha" required placeholder="Alamat lokasi usaha/kerja" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Foto KTP *</label>
+                        <input type="file" id="reg-file-ktp" accept="image/*" required class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Foto Bersama KTP *</label>
+                        <input type="file" id="reg-file-diri" accept="image/*" required class="w-full text-xs text-slate-400 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white cursor-pointer">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password Akun *</label>
+                    <input type="password" id="reg-password" required placeholder="Buat password rahasia" class="w-full px-4 py-3 bg-black/40 border border-white/20 rounded-xl outline-none text-white">
+                </div>
+                <button type="submit" id="btn-reg-submit" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 font-bold rounded-xl shadow-lg transition">Daftar Sekarang</button>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- MODAL SUKSES KEKINIAN -->
+    <div id="success-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md hidden">
+        <div class="bg-white text-slate-900 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🎉</div>
+            <h3 id="modal-title" class="text-xl font-bold mb-2">Berhasil!</h3>
+            <p id="modal-desc" class="text-slate-600 text-sm mb-4">Data berhasil disimpan. Mengalihkan...</p>
+        </div>
+    </div>
+
+    <!-- SCRIPT SUPABASE & LOGIKA -->
+    <script>
+        const SUPABASE_URL = 'https://cwkbyeyjceaqqxovuhyf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3a2J5ZXlqY2VhcXF4b3Z1aHlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDA2MTIsImV4cCI6MjEwNDg3NjYxMn0.hOf0sap6LX6PajxHjRDG4PfeqBFCv738eQ9cFfJdOdE';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Cek Sesi Saat Halaman Dimuat
+        window.addEventListener('DOMContentLoaded', async () => {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) {
+                loadDashboard(session.user);
+            }
+        });
+
+        function switchTab(tab) {
+            const loginC = document.getElementById('form-login-container');
+            const ownerC = document.getElementById('form-owner-container');
+            const regC = document.getElementById('form-register-container');
+            
+            const btnLogin = document.getElementById('btn-login');
+            const btnOwner = document.getElementById('btn-owner');
+            const btnReg = document.getElementById('btn-register');
+
+            loginC.classList.add('hidden');
+            ownerC.classList.add('hidden');
+            regC.classList.add('hidden');
+
+            btnLogin.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/20 transition";
+            btnOwner.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/20 transition";
+            btnReg.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-white/10 text-slate-300 hover:bg-white/20 transition";
+
+            if(tab === 'login') {
+                loginC.classList.remove('hidden');
+                btnLogin.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition";
+            } else if(tab === 'owner') {
+                ownerC.classList.remove('hidden');
+                btnOwner.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition";
+            } else {
+                regC.classList.remove('hidden');
+                btnReg.className = "px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white transition";
+                loadKoperasiList();
+            }
+        }
+
+        async function loadDashboard(user) {
+            // Sembunyikan semua form login/register dan tombol navigasi atas
+            document.getElementById('form-login-container').classList.add('hidden');
+            document.getElementById('form-owner-container').classList.add('hidden');
+            document.getElementById('form-register-container').classList.add('hidden');
+            document.getElementById('nav-buttons').classList.add('hidden');
+
+            const dashContainer = document.getElementById('dashboard-container');
+            dashContainer.classList.remove('hidden');
+
+            // Ambil data profil dari tabel profiles
+            let { data: profile, error } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            const nama = profile ? profile.nama_lengkap : (user.user_metadata.nama_lengkap || 'Pengguna');
+            const role = profile ? profile.role : (user.user_metadata.role || 'member');
+
+            document.getElementById('dash-nama').textContent = nama;
+            document.getElementById('dash-role').textContent = role === 'owner' ? '👑 Pemilik Koperasi (Admin)' : '👤 Nasabah Koperasi';
+
+            let infoHtml = `<p><strong>Email / Akun:</strong> ${user.email}</p>`;
+            if(role === 'owner') {
+                infoHtml += `<p class="text-green-400 font-semibold mt-2">✓ Status: Akses Kelola Koperasi Aktif</p>`;
+            } else {
+                infoHtml += `<p><strong>No HP:</strong> ${profile?.no_hp || '-'}</p>`;
+                infoHtml += `<p><strong>NIK:</strong> ${profile?.nik || '-'}</p>`;
+            }
+            document.getElementById('dash-info').innerHTML = infoHtml;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const inputVal = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const alertBox = document.getElementById('login-alert');
+            const btnLoginSubmit = document.getElementById('btn-login-submit');
+            
+            alertBox.classList.add('hidden');
+            btnLoginSubmit.textContent = 'Memproses Masuk...';
+            btnLoginSubmit.disabled = true;
+
+            let emailLogin = inputVal;
+            if(!inputVal.includes('@')) {
+                emailLogin = `${inputVal}@nasabah.koperasi.com`;
+            }
+
+            try {
+                const { data, error } = await _supabase.auth.signInWithPassword({ email: emailLogin, password: password });
+                if(error) throw error;
+                
+                loadDashboard(data.user);
+            } catch(err) {
+                alertBox.textContent = 'Gagal Login: Periksa kembali NIK/Email dan Password Anda.';
+                alertBox.classList.remove('hidden');
+                btnLoginSubmit.textContent = 'Masuk Aplikasi';
+                btnLoginSubmit.disabled = false;
+            }
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.reload();
+        }
+
+        async function loadKoperasiList() {
+            const select = document.getElementById('reg-koperasi');
+            const { data } = await _supabase.from('koperasi').select('id, nama_koperasi');
+            if(data && data.length > 0) {
+                select.innerHTML = '<option value="">-- Pilih Koperasi --</option>';
+                data.forEach(kop => {
+                    select.innerHTML += `<option value="${kop.id}">${kop.nama_koperasi}</option>`;
+                });
+            } else {
+                select.innerHTML = '<option value="">Belum ada koperasi terdaftar</option>';
+            }
+        }
+
+        function checkNik(input) {
+            const warning = document.getElementById('nik-warning');
+            if(input.value.length !== 16) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        function checkNikOwner(input) {
+            const warning = document.getElementById('owner-nik-warning');
+            if(input.value.length !== 16) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        async function handleRegisterOwner(e) {
+            e.preventDefault();
+            const nikOwner = document.getElementById('owner-nik').value;
+            if(nikOwner.length !== 16) {
+                alert('NIK Pemilik harus tepat 16 digit!');
+                return;
+            }
+
+            const namaOwner = document.getElementById('owner-nama').value;
+            const namaKoperasi = document.getElementById('owner-nama-koperasi').value;
+            const alamatKoperasi = document.getElementById('owner-alamat-koperasi').value;
+            const logoFile = document.getElementById('owner-logo').files[0];
+            const emailOwner = document.getElementById('owner-email').value;
+            const passwordOwner = document.getElementById('owner-password').value;
+
+            const btn = document.getElementById('btn-owner-submit');
+            btn.textContent = 'Mengunggah & Memproses...';
+            btn.disabled = true;
+
+            try {
+                const logoFileName = `logo_${nikOwner}_${Date.now()}.${logoFile.name.split('.').pop()}`;
+                await _supabase.storage.from('koperasi-files').upload(logoFileName, logoFile);
+                const { data: urlLogoData } = _supabase.storage.from('koperasi-files').getPublicUrl(logoFileName);
+
+                const { data: kopData, error: kopError } = await _supabase.from('koperasi').insert([
+                    { 
+                        nama_koperasi: namaKoperasi, 
+                        alamat: alamatKoperasi, 
+                        telepon: urlLogoData.publicUrl 
+                    }
+                ]).select().single();
+
+                if(kopError) throw kopError;
+                const koperasiId = kopData.id;
+
+                const { data: authData, error: authError } = await _supabase.auth.signUp({
+                    email: emailOwner,
+                    password: passwordOwner,
+                    options: {
+                        data: {
+                            nama_lengkap: namaOwner,
+                            role: 'owner',
+                            koperasi_id: koperasiId
+                        }
+                    }
+                });
+
+                if(authError) throw authError;
+
+                if(authData.user) {
+                    await _supabase.from('profiles').upsert({
+                        id: authData.user.id,
+                        nama_lengkap: namaOwner,
+                        role: 'owner',
+                        koperasi_id: koperasiId,
+                        nik: nikOwner
+                    });
+                }
+
+                document.getElementById('modal-title').textContent = 'Koperasi Berhasil Didaftarkan!';
+                document.getElementById('modal-desc').textContent = 'Akun Owner/Admin Anda siap digunakan. Silakan login.';
+                document.getElementById('success-modal').classList.remove('hidden');
+                setTimeout(() => { window.location.reload(); }, 3000);
+
+            } catch(err) {
+                alert('Gagal Mendaftarkan Koperasi: ' + err.message);
+                btn.textContent = 'Daftarkan Koperasi';
+                btn.disabled = false;
+            }
+        }
+
+        async function handleRegisterNasabah(e) {
+            e.preventDefault();
+            const nik = document.getElementById('reg-nik').value;
+            if(nik.length !== 16) {
+                alert('NIK harus 16 digit!');
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-reg-submit');
+            btnSubmit.textContent = 'Mengunggah Data...';
+            btnSubmit.disabled = true;
+
+            try {
+                const fileKtp = document.getElementById('reg-file-ktp').files[0];
+                const fileDiri = document.getElementById('reg-file-diri').files[0];
+                const koperasiId = document.getElementById('reg-koperasi').value;
+                const namaLengkap = document.getElementById('reg-nama').value;
+                const alamat = document.getElementById('reg-alamat').value;
+                const noHp = document.getElementById('reg-hp').value;
+                const jenisPenghasilan = document.getElementById('reg-jenis-penghasilan').value;
+                const detailPenghasilan = document.getElementById('reg-detail-penghasilan').value;
+                const alamatUsaha = document.getElementById('reg-alamat-usaha').value;
+                const password = document.getElementById('reg-password').value;
+
+                const fileNameKtp = `ktp_${nik}_${Date.now()}.${fileKtp.name.split('.').pop()}`;
+                const fileNameDiri = `diri_${nik}_${Date.now()}.${fileDiri.name.split('.').pop()}`;
+
+                await _supabase.storage.from('koperasi-files').upload(fileNameKtp, fileKtp);
+                await _supabase.storage.from('koperasi-files').upload(fileNameDiri, fileDiri);
+
+                const { data: urlKtp } = _supabase.storage.from('koperasi-files').getPublicUrl(fileNameKtp);
+                const { data: urlDiri } = _supabase.storage.from('koperasi-files').getPublicUrl(fileNameDiri);
+
+                const emailDummy = `${nik}@nasabah.koperasi.com`;
+                const { data: authData, error: authError } = await _supabase.auth.signUp({
+                    email: emailDummy,
+                    password: password,
+                    options: {
+                        data: {
+                            nama_lengkap: namaLengkap,
+                            role: 'member',
+                            koperasi_id: koperasiId
+                        }
+                    }
+                });
+
+                if(authError) throw authError;
+
+                if(authData.user) {
+                    await _supabase.from('profiles').upsert({
+                        id: authData.user.id,
+                        nama_lengkap: namaLengkap,
+                        role: 'member',
+                        koperasi_id: koperasiId,
+                        alamat_lengkap: alamat,
+                        no_hp: noHp,
+                        nik: nik,
+                        jenis_penghasilan: jenisPenghasilan,
+                        detail_penghasilan: detailPenghasilan,
+                        alamat_usaha_kerja: alamatUsaha,
+                        foto_ktp_url: urlKtp.publicUrl,
+                        foto_diri_ktp_url: urlDiri.publicUrl
+                    });
+                }
+
+                document.getElementById('modal-title').textContent = 'Pendaftaran Nasabah Berhasil!';
+                document.getElementById('modal-desc').textContent = 'Akun Anda siap digunakan. Mengalihkan ke login...';
+                document.getElementById('success-modal').classList.remove('hidden');
+                setTimeout(() => { window.location.reload(); }, 2500);
+
+            } catch(err) {
+                alert('Pendaftaran Gagal: ' + err.message);
+                btnSubmit.textContent = 'Daftar Sekarang';
+                btnSubmit.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

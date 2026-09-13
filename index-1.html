@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Koperasi Simpan Pinjam</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f6f0e4;
+  --paper:#fffdf7;
+  --ink:#17372f;
+  --ink-dim:#5b6f65;
+  --leaf:#246b50;
+  --leaf-dim:#1c5540;
+  --mint:#dceedd;
+  --sage:#6b8a7a;
+  --sage-tint:#d9e9e8;
+  --coral:#d9614c;
+  --coral-dim:#b84f3d;
+  --coral-tint:#f9e2d9;
+  --gold:#94701c;
+  --gold-tint:#f6edc8;
+  --line:#d9d7ca;
+  --shadow:0 12px 28px rgba(26,61,47,.08);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);
+  font-family:'DM Sans', sans-serif; font-weight:500;
+  background-image:radial-gradient(rgba(23,55,47,.07) .65px, transparent .65px);
+  background-size:7px 7px;}
+body{padding-bottom:96px;}
+input,select,textarea,button{font-family:inherit;}
+.display-font{font-family:'Fraunces', serif; font-weight:700;}
+#app{max-width:640px;margin:0 auto;padding:20px 20px 12px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;
+  background:var(--paper);border:1px solid var(--line);border-radius:24px;
+  padding:18px 20px;margin-bottom:20px;box-shadow:var(--shadow);}
+.topbar h1{font-size:1.6rem;margin:0;line-height:1.1;}
+.topbar p{margin:4px 0 0;color:var(--ink-dim);font-size:.82rem;font-weight:400;}
+.topbar-actions{display:flex;gap:8px;}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:var(--mint);
+  display:flex;align-items:center;justify-content:center;border:none;color:var(--leaf);
+  font-size:1.1rem;cursor:pointer;}
+.back-row{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+.back-btn{width:42px;height:42px;border-radius:50%;background:var(--paper);border:1px solid var(--line);
+  color:var(--leaf);font-size:1.2rem;cursor:pointer;flex-shrink:0;}
+.back-row h1{font-size:1.4rem;margin:0;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.stat-card{border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px;
+  min-height:78px;justify-content:center;background:var(--paper);border:1px solid var(--line);
+  box-shadow:var(--shadow);}
+.stat-card .row{display:flex;align-items:center;gap:10px;}
+.stat-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:1.1rem;flex-shrink:0;background:var(--mint);color:var(--leaf);}
+.stat-card .label{font-size:.78rem;opacity:.85;color:var(--ink-dim);font-weight:600;}
+.stat-card .value{font-size:1.1rem;font-weight:700;}
+.stat-card.teal .stat-icon{background:var(--mint);color:var(--leaf);}
+.stat-card.slate .stat-icon{background:var(--sage-tint);color:#236462;}
+.stat-card.maroon .stat-icon{background:var(--coral-tint);color:var(--coral-dim);}
+.stat-card.red .stat-icon{background:#f6d9d9;color:#a83a3a;}
+hr.sep{border:none;border-top:1px solid var(--line);margin:22px 0;}
+.section-title{color:var(--leaf);font-size:.85rem;letter-spacing:.5px;margin:18px 0 12px;
+  font-weight:700;text-transform:uppercase;}
+.menu-item{display:flex;align-items:center;justify-content:space-between;background:var(--paper);
+  border:1px solid var(--line);border-radius:18px;padding:15px 18px;margin-bottom:12px;cursor:pointer;
+  width:100%;color:var(--ink);text-align:left;box-shadow:var(--shadow);}
+.menu-item .row{display:flex;align-items:center;gap:14px;}
+.menu-item .ic{width:36px;height:36px;border-radius:12px;background:var(--mint);color:var(--leaf);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.menu-item .label{font-size:.98rem;font-weight:600;}
+.menu-item .sub{color:var(--ink-dim);font-size:.78rem;font-weight:400;margin-top:2px;}
+.menu-item .chev{color:var(--sage);font-size:1.1rem;}
+.list-card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:15px 18px;
+  margin-bottom:12px;box-shadow:var(--shadow);}
+.list-card .row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.list-card .ic-box{width:42px;height:42px;border-radius:13px;background:var(--mint);color:var(--leaf);
+  display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.list-card .title{font-size:.98rem;font-weight:600;}
+.list-card .sub{color:var(--ink-dim);font-size:.78rem;font-weight:400;margin-top:2px;}
+.list-card .chev{color:var(--sage);}
+.sub-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px dashed var(--line);}
+.sub-item .dot{width:7px;height:7px;border-radius:50%;background:var(--leaf);flex-shrink:0;}
+.sub-item .txt .t{font-size:.9rem;font-weight:600;}
+.sub-item .txt .s{font-size:.76rem;color:var(--ink-dim);font-weight:400;}
+.sub-item .chev{margin-left:auto;color:var(--sage);}
+.empty-box{background:var(--paper);border:1px dashed var(--line);border-radius:18px;padding:26px 18px;
+  text-align:center;color:var(--ink-dim);font-weight:400;}
+.tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.tab-btn{flex:1;min-width:70px;padding:13px 8px;border-radius:16px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);display:flex;flex-direction:column;align-items:center;
+  gap:5px;cursor:pointer;font-size:.78rem;font-weight:600;}
+.tab-btn.active{background:var(--leaf);color:#fff;border-color:var(--leaf);}
+.field{background:var(--paper);border:1px solid var(--line);border-radius:16px;
+  padding:13px 16px;margin-bottom:13px;}
+.field label{display:block;font-size:.7rem;color:var(--ink-dim);margin-bottom:6px;
+  letter-spacing:.4px;font-weight:700;text-transform:uppercase;}
+.field .with-icon{display:flex;align-items:center;gap:10px;}
+.field .with-icon .fi{color:var(--sage);font-size:1.05rem;}
+.field input, .field select, .field textarea{background:transparent;border:none;outline:none;
+  color:var(--ink);font-size:.98rem;width:100%;font-weight:600;font-family:inherit;}
+.field input::placeholder,.field textarea::placeholder{color:#a9a79a;font-weight:400;}
+.field-suffix{color:var(--ink-dim);font-size:.82rem;white-space:nowrap;}
+.grid-2.tight{gap:12px;}
+.chip-row{display:flex;gap:10px;margin-bottom:14px;}
+.chip{flex:1;padding:13px;border-radius:14px;background:var(--paper);border:1px solid var(--line);
+  color:var(--ink);text-align:center;cursor:pointer;font-size:.88rem;font-weight:600;}
+.chip.active{background:var(--leaf);border-color:var(--leaf);color:#fff;}
+.btn-primary{width:100%;padding:15px;border-radius:16px;background:var(--leaf);border:none;
+  color:#fff;font-size:.98rem;font-weight:700;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:10px;box-shadow:0 8px 18px rgba(36,107,80,.28);}
+.btn-primary:disabled{opacity:.4;}
+.btn-secondary{width:100%;padding:13px;border-radius:16px;background:var(--paper);
+  border:1px solid var(--line);color:var(--ink);font-size:.88rem;font-weight:600;cursor:pointer;margin-bottom:10px;}
+.btn-row{display:flex;gap:10px;}
+.report-card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);}
+.report-card .grp{color:var(--leaf);margin:14px 0 8px;font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.report-card .grp.biaya{color:var(--coral-dim);}
+.report-card .sub-grp{color:var(--ink-dim);font-size:.76rem;margin:10px 0 4px;font-weight:600;}
+.report-line{display:flex;justify-content:space-between;padding:5px 0;font-size:.86rem;font-weight:500;}
+.report-line.total{font-weight:700;border-top:1px solid var(--line);margin-top:8px;padding-top:10px;font-size:.94rem;}
+.report-line .neg{color:var(--coral-dim);}
+.report-line .pos{color:var(--leaf);}
+.badge{padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:700;}
+.badge.debit{background:var(--sage-tint);color:#236462;}
+.badge.kredit{background:var(--coral-tint);color:var(--coral-dim);}
+.badge.aktif{background:var(--mint);color:var(--leaf);}
+.badge.lunas{background:var(--sage-tint);color:#236462;}
+.badge.macet{background:#f6d9d9;color:#a83a3a;}
+.badge.belum{background:var(--gold-tint);color:var(--gold);}
+.badge.admin{background:var(--mint);color:var(--leaf);}
+.badge.penagihan{background:var(--gold-tint);color:var(--gold);}
+.badge.nasabah{background:var(--sage-tint);color:#236462;}
+.toast{position:fixed;bottom:104px;left:50%;transform:translateX(-50%);background:var(--ink);
+  border:1px solid var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font-size:.85rem;
+  font-weight:600;z-index:999;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+.bottom-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);
+  max-width:600px;background:var(--paper);border:1px solid var(--line);border-radius:34px;padding:8px;
+  display:flex;justify-content:space-between;box-shadow:0 10px 28px rgba(26,61,47,.16);z-index:100;}
+.nav-item{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 6px;
+  border-radius:26px;background:transparent;border:none;color:var(--ink-dim);cursor:pointer;font-size:1.1rem;}
+.nav-item.active{background:var(--leaf);color:#fff;font-size:.85rem;}
+.nav-item.active .lbl{display:inline;}
+.nav-item .lbl{display:none;font-weight:700;}
+.fab{position:absolute;top:0;right:0;width:50px;height:50px;border-radius:16px;background:var(--leaf);
+  border:none;color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 8px 18px rgba(36,107,80,.35);}
+.rel{position:relative;}
+.search-box{display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);
+  border-radius:16px;padding:13px 16px;margin-bottom:16px;}
+.search-box input{background:transparent;border:none;outline:none;color:var(--ink);width:100%;font-size:.92rem;font-weight:500;}
+.note-box{background:var(--mint);border-radius:16px;padding:15px;color:var(--leaf-dim);font-size:.82rem;
+  font-weight:500;line-height:1.6;margin:16px 0;}
+.hint{font-size:.75rem;color:var(--ink-dim);font-weight:400;margin:-8px 0 14px 4px;}
+.overlay{position:fixed;inset:0;background:rgba(23,55,47,.35);z-index:200;display:flex;
+  align-items:flex-end;justify-content:center;}
+.sheet{background:var(--paper);width:100%;max-width:640px;border-radius:24px 24px 0 0;
+  padding:22px 20px 30px;max-height:85vh;overflow:auto;}
+.sheet h3{margin-top:0;}
+.small-btn{padding:8px 14px;border-radius:10px;border:none;background:var(--leaf);color:#fff;
+  font-size:.78rem;font-weight:700;cursor:pointer;}
+.small-btn.danger{background:var(--coral);color:#fff;}
+.small-btn.ghost{background:var(--paper);color:var(--ink);border:1px solid var(--line);}
+.progress-bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--leaf);border-radius:6px;}
+.login-wrap{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:20px 0;}
+.login-card{background:var(--paper);border:1px solid var(--line);border-radius:26px;padding:32px 26px;
+  width:100%;max-width:380px;box-shadow:var(--shadow);text-align:center;}
+.login-logo{width:56px;height:56px;border-radius:18px;background:var(--mint);color:var(--leaf);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 14px;}
+.login-card h1{font-size:1.5rem;margin:0 0 4px;}
+.login-sub{color:var(--ink-dim);font-size:.85rem;font-weight:400;margin:0 0 22px;}
+.login-card .field{text-align:left;}
+.login-msg{min-height:18px;color:var(--coral-dim);font-size:.8rem;font-weight:600;margin-top:10px;}
+::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+<div id="app">Memuat...</div>
+<script>
+/* ======================================================================
+   KSP APP — state & helpers
+====================================================================== */
+const LS_URL='ksp_sb_url', LS_KEY='ksp_sb_key', LS_SESSION='ksp_session';
+let sb=null;
+let VIEW='beranda';
+let STACK=[]; // navigation history for back button
+let TOAST_T=null;
+
+const COA_CACHE={list:[], byId:{}, byKode:{}};
+let PENGATURAN={denda_per_hari:0.5, grace_period:7, maksimal_denda_persen:50, nama_koperasi:'KSP', tagline:'Koperasi Simpan Pinjam'};
+
+const ROLE_HOME={admin:'beranda', penagihan:'tagihan', nasabah:'nasabah-dashboard'};
+const ROLE_VIEWS={
+  penagihan:['tagihan','anggota','anggota-detail','pembiayaan','pembiayaan-detail'],
+  nasabah:['nasabah-dashboard'],
+};
+
+function fmtRp(n){ n = Math.round(Number(n)||0); return 'Rp ' + n.toLocaleString('id-ID'); }
+function fmtDate(d){ if(!d) return '-'; const dt=new Date(d); return dt.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function pad(n,len){ return String(n).padStart(len,'0'); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+function toast(msg, ok=true){
+  clearTimeout(TOAST_T);
+  let el=document.getElementById('toastEl');
+  if(!el){ el=document.createElement('div'); el.id='toastEl'; el.className='toast'; document.body.appendChild(el); }
+  el.style.borderColor = ok? 'var(--ink)':'var(--coral)';
+  el.textContent=msg; el.style.display='block';
+  TOAST_T=setTimeout(()=>{ el.style.display='none'; },2600);
+}
+
+function hasConfig(){ return !!(localStorage.getItem(LS_URL) && localStorage.getItem(LS_KEY)); }
+function initSupabase(){
+  const url=localStorage.getItem(LS_URL), key=localStorage.getItem(LS_KEY);
+  if(url && key){ try{ sb = window.supabase.createClient(url,key); }catch(e){ sb=null; } }
+}
+initSupabase();
+
+/* ======================================================================
+   AUTH / SESSION
+====================================================================== */
+function getSession(){ try{ return JSON.parse(localStorage.getItem(LS_SESSION)); }catch(e){ return null; } }
+function setSession(s){ localStorage.setItem(LS_SESSION, JSON.stringify(s)); }
+function clearSession(){ localStorage.removeItem(LS_SESSION); }
+function isAdmin(){ const s=getSession(); return !!s && s.role==='admin'; }
+
+async function doLogin(){
+  const username=document.getElementById('loginUser').value.trim();
+  const password=document.getElementById('loginPass').value;
+  const msg=document.getElementById('loginMsg');
+  if(!username||!password){ msg.textContent='Isi username & password'; return; }
+  msg.textContent='Memeriksa...';
+  try{
+    const {data,error} = await sb.from('users').select('*').eq('username',username).eq('password',password).maybeSingle();
+    if(error) throw error;
+    if(!data){ msg.textContent='Username atau password salah'; return; }
+    setSession({ id:data.id, username:data.username, nama:data.nama, role:data.role, anggota_id:data.anggota_id });
+    toast('Selamat datang, '+data.nama+' ✔');
+    STACK=[]; VIEW=ROLE_HOME[data.role]||'beranda'; render();
+  }catch(e){
+    msg.textContent='Gagal login: '+(e.message||e);
+  }
+}
+function doLogout(){
+  clearSession(); STACK=[]; VIEW='login'; render();
+}
+
+/* ======================================================================
+   ROUTER
+====================================================================== */
+function go(view, push=true){
+  if(push) STACK.push(VIEW);
+  VIEW=view;
+  render();
+}
+function back(){
+  const prev = STACK.pop();
+  VIEW = prev || (getSession() ? ROLE_HOME[getSession().role] : 'login');
+  render();
+}
+
+async function render(){
+  const app=document.getElementById('app');
+  if(!hasConfig()){
+    VIEW='setup';
+  } else {
+    const session=getSession();
+    if(!session){ VIEW='login'; }
+    else if(session.role!=='admin'){
+      const allowed = ROLE_VIEWS[session.role]||[];
+      if(!allowed.includes(VIEW)) VIEW = ROLE_HOME[session.role];
+    }
+  }
+  app.innerHTML = '<div style="padding:60px 0;text-align:center;color:var(--ink-dim);">Memuat...</div>';
+  try{
+    let html='';
+    switch(VIEW){
+      case 'setup': html = await viewSetup(); break;
+      case 'login': html = await viewLogin(); break;
+      case 'beranda': html = await viewBeranda(); break;
+      case 'tagihan': html = await viewTagihan(); break;
+      case 'nasabah-dashboard': html = await viewNasabahDashboard(); break;
+      case 'anggota': html = await viewAnggotaList(); break;
+      case 'anggota-baru': html = await viewAnggotaForm(); break;
+      case 'anggota-detail': html = await viewAnggotaDetail(); break;
+      case 'tabungan': html = await viewTabunganList(); break;
+      case 'tabungan-transaksi': html = await viewTabunganTransaksi(); break;
+      case 'pembiayaan': html = await viewPembiayaanList(); break;
+      case 'pembiayaan-baru': html = await viewPembiayaanForm(); break;
+      case 'pembiayaan-detail': html = await viewPembiayaanDetail(); break;
+      case 'deposito': html = await viewDepositoList(); break;
+      case 'deposito-baru': html = await viewDepositoForm(); break;
+      case 'pengeluaran': html = await viewPengeluaranList(); break;
+      case 'pengeluaran-baru': html = await viewPengeluaranForm(); break;
+      case 'jurnal': html = await viewJurnalList(); break;
+      case 'jurnal-baru': html = await viewJurnalForm(); break;
+      case 'coa': html = await viewCoaList(); break;
+      case 'coa-baru': html = await viewCoaForm(); break;
+      case 'laporan': html = await viewLaporanMenu(); break;
+      case 'laporan-neraca': html = await viewNeraca(); break;
+      case 'laporan-labarugi': html = await viewLabaRugi(); break;
+      case 'laporan-bukubesar': html = await viewBukuBesar(); break;
+      case 'laporan-mutasitabungan': html = await viewMutasiTabungan(); break;
+      case 'laporan-rekapsaldo': html = await viewRekapSaldo(); break;
+      case 'laporan-riwayatangsuran': html = await viewRiwayatAngsuran(); break;
+      case 'laporan-klasifikasi': html = await viewKlasifikasiKredit(); break;
+      case 'laporan-jatuhtempo': html = await viewJatuhTempoReport(); break;
+      case 'laporan-skorkredit': html = await viewSkorKredit(); break;
+      case 'pengaturan': html = await viewPengaturan('denda'); break;
+      default: html = await viewBeranda();
+    }
+    const noChrome = ['setup','login','nasabah-dashboard'];
+    app.innerHTML = html + (noChrome.includes(VIEW) ? '' : navBar());
+  }catch(e){
+    console.error(e);
+    app.innerHTML = `<div class="empty-box">Terjadi error: ${e.message||e}<br><br>
+      <button class="small-btn ghost" onclick="go('pengaturan',false)">Cek Pengaturan Database</button></div>`;
+  }
+}
+
+function navBar(){
+  const session=getSession();
+  if(!session) return '';
+  let items;
+  if(session.role==='admin'){
+    items=[
+      {v:'beranda', ic:'⌂', lbl:'Beranda'},
+      {v:'anggota', ic:'☺', lbl:'Anggota'},
+      {v:'tabungan', ic:'⛁', lbl:'Tabungan'},
+      {v:'pembiayaan', ic:'▤', lbl:'Pembiayaan'},
+      {v:'laporan', ic:'▦', lbl:'Laporan'},
+    ];
+  } else if(session.role==='penagihan'){
+    items=[
+      {v:'tagihan', ic:'⏰', lbl:'Tagihan'},
+      {v:'anggota', ic:'☺', lbl:'Anggota'},
+      {v:'pembiayaan', ic:'▤', lbl:'Pembiayaan'},
+    ];
+  } else { return ''; }
+  return `<div class="bottom-nav">` + items.map(it=>{
+    const active = VIEW===it.v;
+    return `<button class="nav-item ${active?'active':''}" onclick="go('${it.v}', false); STACK=[];">
+      <span>${it.ic}</span><span class="lbl">${it.lbl}</span></button>`;
+  }).join('') + `</div>`;
+}
+
+function backRow(title){
+  return `<div class="back-row"><button class="back-btn" onclick="back()">←</button><h1>${title}</h1></div>`;
+}
+
+/* ======================================================================
+   SETUP / PENGATURAN DATABASE
+====================================================================== */
+async function viewSetup(){
+  return `
+  <div class="topbar"><div><h1 class="display-font">KSP</h1><p>Koperasi Simpan Pinjam</p></div></div>
+  <div class="section-title">Hubungkan ke Supabase</div>
+  <p style="font-weight:400;color:var(--ink-dim);font-size:.85rem;">
+    Buat project baru di supabase.com, jalankan file <b>schema.sql</b> di SQL Editor,
+    lalu tempel Project URL dan anon public key (Settings &rarr; API) di bawah ini.
+  </p>
+  <div class="field"><label>SUPABASE PROJECT URL</label>
+    <input id="setupUrl" placeholder="https://xxxx.supabase.co" value="${localStorage.getItem(LS_URL)||''}">
+  </div>
+  <div class="field"><label>SUPABASE ANON KEY</label>
+    <input id="setupKey" placeholder="eyJhbGciOi..." value="${localStorage.getItem(LS_KEY)||''}">
+  </div>
+  <button class="btn-primary" onclick="saveSetup()">💾 Simpan &amp; Hubungkan</button>
+  `;
+}
+async function saveSetup(){
+  const url=document.getElementById('setupUrl').value.trim();
+  const key=document.getElementById('setupKey').value.trim();
+  if(!url || !key){ toast('URL dan Key wajib diisi', false); return; }
+  localStorage.setItem(LS_URL,url); localStorage.setItem(LS_KEY,key);
+  initSupabase();
+  try{
+    const {error} = await sb.from('pengaturan').select('id').limit(1);
+    if(error) throw error;
+    toast('Terhubung ke Supabase ✔');
+    VIEW='login'; render();
+  }catch(e){
+    toast('Gagal konek: '+(e.message||e), false);
+  }
+}
+
+/* ======================================================================
+   LOGIN
+====================================================================== */
+async function viewLogin(){
+  try{ await loadPengaturan(); }catch(e){}
+  return `
+  <div class="login-wrap"><div class="login-card">
+    <div class="login-logo">🏦</div>
+    <h1 class="display-font">${PENGATURAN.nama_koperasi||'KSP'}</h1>
+    <p class="login-sub">${PENGATURAN.tagline||'Masuk untuk melanjutkan'}</p>
+    <div class="field"><label>Username</label><input id="loginUser" placeholder="username" onkeydown="if(event.key==='Enter')doLogin();"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div>
+    <button class="btn-primary" onclick="doLogin()">Masuk</button>
+    <p id="loginMsg" class="login-msg"></p>
+    <p class="hint" style="margin-top:6px;">Default admin: <b>admin</b> / <b>admin123</b></p>
+    <button class="small-btn ghost" style="margin-top:8px;" onclick="VIEW='setup';render();">Ganti koneksi database</button>
+  </div></div>`;
+}
+
+/* ======================================================================
+   DATA HELPERS
+====================================================================== */
+async function loadCoa(){
+  const {data,error} = await sb.from('coa').select('*').order('kode');
+  if(error) throw error;
+  COA_CACHE.list=data||[]; COA_CACHE.byId={}; COA_CACHE.byKode={};
+  COA_CACHE.list.forEach(a=>{ COA_CACHE.byId[a.id]=a; COA_CACHE.byKode[a.kode]=a; });
+  return COA_CACHE.list;
+}
+function coaByNama(nama){ return COA_CACHE.list.find(a=>a.nama===nama); }
+
+async function loadPengaturan(){
+  const {data} = await sb.from('pengaturan').select('*').eq('id',1).single();
+  if(data) PENGATURAN = data;
+  return PENGATURAN;
+}
+
+async function postJurnal(tanggal, keterangan, akunDebitNama, akunKreditNama, jumlah, sumber){
+  if(!jumlah || jumlah<=0) return;
+  const d = coaByNama(akunDebitNama), k = coaByNama(akunKreditNama);
+  if(!d || !k){ console.warn('Akun tidak ditemukan:', akunDebitNama, akunKreditNama); return; }
+  await sb.from('jurnal').insert({
+    tanggal: tanggal||todayISO(), keterangan, akun_debit_id:d.id, akun_kredit_id:k.id, jumlah, sumber:sumber||'manual'
+  });
+}
+
+/* saldo akun dari seluruh jurnal, sesuai tipe normal (debit/kredit) */
+async function computeCoaBalances(){
+  await loadCoa();
+  const {data:rows,error} = await sb.from('jurnal').select('akun_debit_id, akun_kredit_id, jumlah');
+  if(error) throw error;
+  const bal={};
+  COA_CACHE.list.forEach(a=>bal[a.id]=0);
+  (rows||[]).forEach(r=>{
+    if(bal[r.akun_debit_id]!==undefined) bal[r.akun_debit_id]+=Number(r.jumlah);
+    if(bal[r.akun_kredit_id]!==undefined) bal[r.akun_kredit_id]-=Number(r.jumlah);
+  });
+  const result={};
+  COA_CACHE.list.forEach(a=>{
+    result[a.id] = a.tipe_normal==='debit' ? bal[a.id] : -bal[a.id];
+  });
+  return result;
+}
+
+/* ======================================================================
+   BERANDA (ADMIN)
+====================================================================== */
+async function viewBeranda(){
+  await loadPengaturan();
+  const [{count:jumlahAnggota}, {data:rekList}, {data:pembList}] = await Promise.all([
+    sb.from('anggota').select('*',{count:'exact',head:true}),
+    sb.from('rekening_tabungan').select('saldo'),
+    sb.from('pembiayaan').select('id,pokok,status'),
+  ]);
+  const totalTabungan = (rekList||[]).reduce((s,r)=>s+Number(r.saldo||0),0);
+  const totalPembiayaan = (pembList||[]).reduce((s,p)=>s+Number(p.pokok||0),0);
+
+  const {data:angBelum} = await sb.from('angsuran').select('pokok,status').eq('status','belum');
+  const piutangBerjalan = (angBelum||[]).reduce((s,a)=>s+Number(a.pokok||0),0);
+
+  const {data:jt} = await sb.from('angsuran')
+    .select('id, tanggal_jatuh_tempo, total, ke, pembiayaan_id, pembiayaan:pembiayaan_id(no_rekening, anggota:anggota_id(nama))')
+    .eq('status','belum').order('tanggal_jatuh_tempo').limit(5);
+
+  const today=new Date();
+  const jtHtml = (jt&&jt.length) ? jt.map(a=>{
+    const due=new Date(a.tanggal_jatuh_tempo);
+    const late = Math.floor((today-due)/86400000);
+    const nm = a.pembiayaan?.anggota?.nama || '-';
+    const no = a.pembiayaan?.no_rekening || '-';
+    return `<div class="sub-item"><span class="dot" style="background:${late>0?'var(--coral)':'var(--leaf)'}"></span>
+      <div class="txt"><div class="t">${nm} — angsuran ke-${a.ke}</div>
+      <div class="s">${no} · jatuh tempo ${fmtDate(a.tanggal_jatuh_tempo)} ${late>0?`· telat ${late} hari`:''}</div></div>
+      <div style="margin-left:auto;font-size:.85rem;font-weight:700;">${fmtRp(a.total)}</div></div>`;
+  }).join('') : `<div style="text-align:center;color:var(--ink-dim);font-weight:400;padding:8px 0;">Tidak ada angsuran jatuh tempo</div>`;
+
+  const session=getSession();
+  return `
+  <div class="topbar">
+    <div><h1 class="display-font">${PENGATURAN.nama_koperasi||'KSP'}</h1><p>${PENGATURAN.tagline||'Koperasi Simpan Pinjam'}</p></div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="go('pengaturan')">⚙</button>
+      <button class="icon-btn" onclick="doLogout()" title="Keluar (${session?.nama||''})">⏻</button>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="stat-card teal"><div class="row"><div class="stat-icon">☺</div>
+      <div><div class="label">Total Anggota</div><div class="value">${jumlahAnggota||0}</div></div></div></div>
+    <div class="stat-card slate"><div class="row"><div class="stat-icon">⛁</div>
+      <div><div class="label">Total Tabungan</div><div class="value">${fmtRp(totalTabungan)}</div></div></div></div>
+    <div class="stat-card maroon"><div class="row"><div class="stat-icon">▤</div>
+      <div><div class="label">Total Pembiayaan</div><div class="value">${fmtRp(totalPembiayaan)}</div></div></div></div>
+    <div class="stat-card red"><div class="row"><div class="stat-icon">▥</div>
+      <div><div class="label">Piutang Berjalan</div><div class="value">${fmtRp(piutangBerjalan)}</div></div></div></div>
+  </div>
+  <hr class="sep">
+  <div class="section-title">Menu</div>
+  <button class="menu-item" onclick="go('jurnal')"><span class="row"><span class="ic">📔</span><span class="label">Jurnal Umum</span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('pengeluaran')"><span class="row"><span class="ic">💸</span><span class="label">Pengeluaran</span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('deposito')"><span class="row"><span class="ic">◐</span><span class="label">Deposito</span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('coa')"><span class="row"><span class="ic">🗂</span><span class="label">Daftar Akun (COA)</span></span><span class="chev">›</span></button>
+  <div class="section-title">Angsuran Jatuh Tempo</div>
+  <div class="list-card">${jtHtml}</div>
+  `;
+}
+
+/* ======================================================================
+   TAGIHAN (PENAGIHAN)
+====================================================================== */
+async function viewTagihan(){
+  const {data} = await sb.from('angsuran')
+    .select('*, pembiayaan:pembiayaan_id(no_rekening, anggota:anggota_id(nama))')
+    .eq('status','belum').order('tanggal_jatuh_tempo').limit(300);
+  const rows=data||[];
+  const today=new Date();
+  const totalTertunggak = rows.reduce((s,a)=>s+Number(a.total||0),0);
+  const session=getSession();
+  const html = rows.length ? rows.map(a=>{
+    const late=Math.floor((today-new Date(a.tanggal_jatuh_tempo))/86400000);
+    return `<div class="list-card" style="cursor:pointer" onclick="openPembiayaan('${a.pembiayaan_id}')">
+      <div class="row"><div>
+        <div class="title" style="font-size:.92rem;">${a.pembiayaan?.anggota?.nama||'-'} — ke-${a.ke}</div>
+        <div class="sub">${a.pembiayaan?.no_rekening||''} · JT ${fmtDate(a.tanggal_jatuh_tempo)} ${late>0?`· telat ${late} hari`:''}</div>
+      </div><div style="font-size:.98rem;font-weight:700;">${fmtRp(a.total)}</div></div></div>`;
+  }).join('') : `<div class="empty-box">Tidak ada tagihan berjalan 🎉</div>`;
+  return `
+  <div class="topbar"><div><h1 class="display-font">Tagihan</h1><p>Daftar angsuran yang perlu ditagih</p></div>
+    <div class="topbar-actions"><button class="icon-btn" onclick="doLogout()" title="Keluar (${session?.nama||''})">⏻</button></div></div>
+  <div class="stat-card red" style="margin-bottom:16px;"><div class="row"><div class="stat-icon">▥</div>
+    <div><div class="label">Total Tertunggak</div><div class="value">${fmtRp(totalTertunggak)}</div></div></div></div>
+  <div class="search-box">🔍<input placeholder="Cari nama anggota..." oninput="filterList(this,'.list-card')"></div>
+  ${html}`;
+}
+
+/* ======================================================================
+   DASHBOARD NASABAH
+====================================================================== */
+async function viewNasabahDashboard(){
+  const session=getSession();
+  if(!session || !session.anggota_id){
+    return `<div class="login-wrap"><div class="login-card">
+      <div class="login-logo">⚠</div><h1 class="display-font">Akun belum terhubung</h1>
+      <p class="login-sub">Akun ini belum ditautkan ke data anggota. Hubungi admin koperasi.</p>
+      <button class="btn-primary" onclick="doLogout()">Keluar</button>
+    </div></div>`;
+  }
+  const {data:a} = await sb.from('anggota').select('*').eq('id',session.anggota_id).single();
+  const {data:rek} = await sb.from('rekening_tabungan').select('*').eq('anggota_id',session.anggota_id);
+  const {data:pemb} = await sb.from('pembiayaan').select('*, angsuran(*)').eq('anggota_id',session.anggota_id).order('created_at',{ascending:false});
+  if(!a){
+    return `<div class="empty-box">Data anggota tidak ditemukan. Hubungi admin.
+      <br><br><button class="small-btn ghost" onclick="doLogout()">Keluar</button></div>`;
+  }
+  const totalSaldo=(rek||[]).reduce((s,r)=>s+Number(r.saldo||0),0);
+  const pembHtml=(pemb||[]).map(p=>{
+    const ang=(p.angsuran||[]).slice().sort((x,y)=>x.ke-y.ke);
+    const lunas=ang.filter(x=>x.status==='lunas');
+    const belum=ang.filter(x=>x.status==='belum');
+    const totalDibayar=lunas.reduce((s,x)=>s+Number(x.total||0)+Number(x.denda||0),0);
+    const sisaNominal=belum.reduce((s,x)=>s+Number(x.total||0),0);
+    const next=belum.slice().sort((x,y)=>new Date(x.tanggal_jatuh_tempo)-new Date(y.tanggal_jatuh_tempo))[0];
+    const pct = ang.length? Math.round((lunas.length/ang.length)*100) : 0;
+    return `<div class="list-card">
+      <div class="row"><div><div class="title">${p.no_rekening}</div><div class="sub">Pokok ${fmtRp(p.pokok)} · ${p.tenor_bulan} bln · ${p.bunga_persen}%/thn</div></div>
+      <span class="badge ${p.status}">${p.status.toUpperCase()}</span></div>
+      <div class="progress-bar" style="margin:12px 0 8px;"><div class="progress-fill" style="width:${pct}%;"></div></div>
+      <div class="sub" style="margin-bottom:10px;">${lunas.length}/${ang.length} angsuran lunas (${pct}%)</div>
+      <div class="grid-2 tight">
+        <div><div class="sub">Sisa Angsuran</div><div class="title" style="font-size:.9rem;">${belum.length}x · ${fmtRp(sisaNominal)}</div></div>
+        <div><div class="sub">Total Sudah Dibayar</div><div class="title" style="font-size:.9rem;">${fmtRp(totalDibayar)}</div></div>
+      </div>
+      ${next ? `<div class="note-box">Angsuran berikutnya: ke-${next.ke} · <b>${fmtRp(next.total)}</b> · jatuh tempo ${fmtDate(next.tanggal_jatuh_tempo)}</div>`
+             : (ang.length? `<div class="note-box">🎉 Semua angsuran sudah lunas</div>` : '')}
+    </div>`;
+  }).join('') || `<div class="empty-box">Belum ada pembiayaan</div>`;
+
+  return `
+  <div class="topbar"><div><h1 class="display-font">${a.nama}</h1><p>No. Anggota ${a.no_anggota}</p></div>
+    <div class="topbar-actions"><button class="icon-btn" onclick="doLogout()">⏻</button></div></div>
+  <div class="stat-card slate" style="margin-bottom:20px;"><div class="row"><div class="stat-icon">⛁</div>
+    <div><div class="label">Saldo Tabungan</div><div class="value">${fmtRp(totalSaldo)}</div></div></div></div>
+  <div class="section-title">Pembiayaan Saya</div>
+  ${pembHtml}
+  `;
+}
+
+/* ======================================================================
+   ANGGOTA
+====================================================================== */
+async function viewAnggotaList(){
+  const {data} = await sb.from('anggota').select('*').order('created_at',{ascending:false});
+  const rows = data||[];
+  const html = rows.length ? rows.map(a=>`
+    <div class="list-card" style="cursor:pointer" onclick="openAnggota('${a.id}')">
+      <div class="row"><div style="display:flex;align-items:center;gap:12px;">
+        <div class="ic-box">☺</div>
+        <div><div class="title">${a.nama}</div><div class="sub">No. ${a.no_anggota} · ${a.telepon||'-'}</div></div>
+      </div><span class="chev">›</span></div>
+    </div>`).join('') : `<div class="empty-box">Belum ada anggota. Tambahkan anggota pertama.</div>`;
+  return `
+  <div class="rel">${backRow('Anggota')}
+    ${isAdmin()?'<button class="fab" onclick="go(\'anggota-baru\')">+</button>':''}
+  </div>
+  <div class="search-box">🔍<input placeholder="Cari anggota..." oninput="filterList(this,'.list-card')"></div>
+  ${html}
+  `;
+}
+window.currentAnggotaId=null;
+function openAnggota(id){ window.currentAnggotaId=id; go('anggota-detail'); }
+
+async function viewAnggotaForm(){
+  const {count} = await sb.from('anggota').select('*',{count:'exact',head:true});
+  const noAnggota = pad((count||0)+1, 4);
+  return `
+  ${backRow('Anggota Baru')}
+  <div class="section-title">Identitas</div>
+  <div class="field"><label>NO ANGGOTA</label><div class="with-icon"><span class="fi">#</span>
+    <input id="fNoAnggota" value="${noAnggota}"></div></div>
+  <div class="field"><label>NAMA LENGKAP</label><div class="with-icon"><span class="fi">☺</span>
+    <input id="fNama" placeholder="Nama Lengkap"></div></div>
+  <div class="field"><label>ALAMAT</label><div class="with-icon"><span class="fi">⌂</span>
+    <input id="fAlamat" placeholder="Alamat"></div></div>
+  <div class="field"><label>NO TELEPON</label><div class="with-icon"><span class="fi">☎</span>
+    <input id="fTelepon" placeholder="No Telepon"></div></div>
+  <div class="section-title">Simpanan</div>
+  <div class="grid-2 tight">
+    <div class="field"><label>SIMPANAN POKOK</label><div class="with-icon"><span class="fi">🐷</span>
+      <input id="fPokok" type="number" placeholder="0"></div></div>
+    <div class="field"><label>SIMPANAN WAJIB</label><div class="with-icon"><span class="fi">📈</span>
+      <input id="fWajib" type="number" placeholder="0"></div></div>
+  </div>
+  <div class="field"><label>SIMPANAN KHUSUS</label><div class="with-icon"><span class="fi">★</span>
+    <input id="fKhusus" type="number" placeholder="0"></div></div>
+  <button class="btn-primary" onclick="saveAnggota()">💾 Simpan</button>
+  `;
+}
+async function saveAnggota(){
+  const nama=document.getElementById('fNama').value.trim();
+  if(!nama){ toast('Nama wajib diisi', false); return; }
+  const no_anggota=document.getElementById('fNoAnggota').value.trim();
+  const alamat=document.getElementById('fAlamat').value.trim();
+  const telepon=document.getElementById('fTelepon').value.trim();
+  const pokok=Number(document.getElementById('fPokok').value||0);
+  const wajib=Number(document.getElementById('fWajib').value||0);
+  const khusus=Number(document.getElementById('fKhusus').value||0);
+
+  const {data,error} = await sb.from('anggota').insert({
+    no_anggota, nama, alamat, telepon, simpanan_pokok:pokok, simpanan_wajib:wajib, simpanan_khusus:khusus
+  }).select().single();
+  if(error){ toast('Gagal simpan: '+error.message, false); return; }
+
+  const noRek = 'TB-' + todayISO().slice(2).replace(/-/g,'') + '-' + pad((Math.floor(Math.random()*900)+100),3);
+  await sb.from('rekening_tabungan').insert({ anggota_id:data.id, no_rekening:noRek, saldo:0 });
+
+  await loadCoa();
+  const tgl=todayISO();
+  if(pokok>0) await postJurnal(tgl, `Simpanan pokok - ${nama}`, 'Kas','Simpanan Pokok', pokok, 'anggota');
+  if(wajib>0) await postJurnal(tgl, `Simpanan wajib - ${nama}`, 'Kas','Simpanan Wajib', wajib, 'anggota');
+  if(khusus>0) await postJurnal(tgl, `Simpanan khusus - ${nama}`, 'Kas','Simpanan Khusus', khusus, 'anggota');
+
+  toast('Anggota tersimpan ✔');
+  STACK=['beranda']; go('anggota', false);
+}
+
+async function viewAnggotaDetail(){
+  const id=window.currentAnggotaId;
+  const {data:a} = await sb.from('anggota').select('*').eq('id',id).single();
+  const {data:rek} = await sb.from('rekening_tabungan').select('*').eq('anggota_id',id);
+  const {data:pemb} = await sb.from('pembiayaan').select('*').eq('anggota_id',id);
+  if(!a) return `${backRow('Anggota')}<div class="empty-box">Data tidak ditemukan</div>`;
+  return `
+  ${backRow(a.nama)}
+  <div class="list-card">
+    <div class="sub">No. Anggota</div><div class="title">${a.no_anggota}</div>
+    <hr class="sep" style="margin:12px 0">
+    <div class="sub">Alamat</div><div class="title" style="font-size:.9rem;">${a.alamat||'-'}</div>
+    <hr class="sep" style="margin:12px 0">
+    <div class="sub">No Telepon</div><div class="title" style="font-size:.9rem;">${a.telepon||'-'}</div>
+  </div>
+  <div class="section-title">Simpanan</div>
+  <div class="grid-2">
+    <div class="stat-card teal"><div class="label">Pokok</div><div class="value">${fmtRp(a.simpanan_pokok)}</div></div>
+    <div class="stat-card slate"><div class="label">Wajib</div><div class="value">${fmtRp(a.simpanan_wajib)}</div></div>
+  </div>
+  <div class="section-title">Rekening Tabungan</div>
+  ${(rek&&rek.length) ? rek.map(r=>`<div class="list-card"><div class="row">
+    <div><div class="title">${r.no_rekening}</div><div class="sub">Saldo</div></div>
+    <div style="font-size:1rem;font-weight:700;">${fmtRp(r.saldo)}</div></div></div>`).join('') : `<div class="empty-box">Belum ada rekening</div>`}
+  <div class="section-title">Pembiayaan</div>
+  ${(pemb&&pemb.length) ? pemb.map(p=>`<div class="list-card"><div class="row">
+    <div><div class="title">${p.no_rekening}</div><div class="sub">${fmtRp(p.pokok)} · ${p.tenor_bulan} bln</div></div>
+    <span class="badge ${p.status}">${p.status.toUpperCase()}</span></div></div>`).join('') : `<div class="empty-box">Belum ada pembiayaan</div>`}
+  `;
+}
+
+/* ======================================================================
+   TABUNGAN
+====================================================================== */
+async function viewTabunganList(){
+  const {data} = await sb.from('rekening_tabungan').select('*, anggota:anggota_id(nama)').order('created_at',{ascending:false});
+  const rows=data||[];
+  const html = rows.length ? rows.map(r=>`
+    <div class="list-card" style="cursor:pointer" onclick="openTabungan('${r.id}')">
+      <div class="row"><div style="display:flex;align-items:center;gap:12px;">
+        <div class="ic-box" style="background:var(--sage-tint);color:#236462;">⛁</div>
+        <div><div class="title">${r.anggota?.nama||'-'}</div><div class="sub">${r.no_rekening}</div></div>
+      </div><div style="font-size:1rem;font-weight:700;">${fmtRp(r.saldo)}</div></div>
+    </div>`).join('') : `<div class="empty-box">Belum ada rekening tabungan. Tambahkan anggota untuk membuat rekening.</div>`;
+  return `${backRow('Tabungan')}
+  <div class="search-box">🔍<input placeholder="Cari rekening..." oninput="filterList(this,'.list-card')"></div>
+  ${html}`;
+}
+window.currentRekeningId=null;
+function openTabungan(id){ window.currentRekeningId=id; go('tabungan-transaksi'); }
+
+async function viewTabunganTransaksi(){
+  const id=window.currentRekeningId;
+  const {data:r} = await sb.from('rekening_tabungan').select('*, anggota:anggota_id(nama)').eq('id',id).single();
+  const {data:tx} = await sb.from('tabungan_transaksi').select('*').eq('rekening_id',id).order('tanggal',{ascending:false}).limit(30);
+  if(!r) return `${backRow('Tabungan')}<div class="empty-box">Data tidak ditemukan</div>`;
+  return `
+  ${backRow(r.anggota?.nama||'Tabungan')}
+  <div class="stat-card slate" style="margin-bottom:16px;"><div class="label">Saldo — ${r.no_rekening}</div><div class="value" style="font-size:1.4rem;">${fmtRp(r.saldo)}</div></div>
+  <div class="btn-row" style="margin-bottom:20px;">
+    <button class="btn-primary" onclick="openTxForm('setor')">↓ Setor</button>
+    <button class="btn-primary" style="background:var(--coral);box-shadow:0 8px 18px rgba(217,97,76,.28);" onclick="openTxForm('tarik')">↑ Tarik</button>
+  </div>
+  <div id="txFormSlot"></div>
+  <div class="section-title">Riwayat Mutasi</div>
+  ${(tx&&tx.length)? tx.map(t=>`<div class="sub-item"><span class="dot" style="background:${t.jenis==='setor'?'var(--leaf)':'var(--coral)'}"></span>
+    <div class="txt"><div class="t">${t.jenis==='setor'?'Setor':'Tarik'} ${fmtRp(t.jumlah)}</div>
+    <div class="s">${fmtDate(t.tanggal)} · saldo: ${fmtRp(t.saldo_setelah)} ${t.keterangan?('· '+t.keterangan):''}</div></div></div>`).join('')
+    : `<div class="empty-box">Belum ada mutasi</div>`}
+  `;
+}
+function openTxForm(jenis){
+  document.getElementById('txFormSlot').innerHTML = `
+  <div class="field"><label>JUMLAH ${jenis.toUpperCase()}</label><div class="with-icon"><span class="fi">Rp</span>
+    <input id="txJumlah" type="number" placeholder="0"></div></div>
+  <div class="field"><label>KETERANGAN (OPSIONAL)</label><input id="txKet" placeholder="Keterangan"></div>
+  <button class="btn-primary" onclick="saveTabunganTx('${jenis}')">💾 Simpan ${jenis==='setor'?'Setoran':'Penarikan'}</button>`;
+}
+async function saveTabunganTx(jenis){
+  const jumlah=Number(document.getElementById('txJumlah').value||0);
+  const ket=document.getElementById('txKet').value.trim();
+  if(jumlah<=0){ toast('Jumlah harus lebih dari 0', false); return; }
+  const id=window.currentRekeningId;
+  const {data:r} = await sb.from('rekening_tabungan').select('*').eq('id',id).single();
+  if(jenis==='tarik' && jumlah>r.saldo){ toast('Saldo tidak mencukupi', false); return; }
+  const saldoBaru = jenis==='setor' ? Number(r.saldo)+jumlah : Number(r.saldo)-jumlah;
+  await sb.from('tabungan_transaksi').insert({ rekening_id:id, jenis, jumlah, saldo_setelah:saldoBaru, keterangan:ket });
+  await sb.from('rekening_tabungan').update({ saldo:saldoBaru }).eq('id',id);
+  await loadCoa();
+  if(jenis==='setor') await postJurnal(todayISO(), `Setoran tabungan ${r.no_rekening}`, 'Kas','Tabungan', jumlah, 'tabungan');
+  else await postJurnal(todayISO(), `Penarikan tabungan ${r.no_rekening}`, 'Tabungan','Kas', jumlah, 'tabungan');
+  toast('Transaksi tersimpan ✔');
+  render();
+}
+
+/* ======================================================================
+   PEMBIAYAAN
+====================================================================== */
+function hitungAngsuran(pokok, bungaPersenThn, tenor, jenis){
+  const list=[]; const i = (bungaPersenThn/100)/12;
+  if(jenis==='flat'){
+    const pokokPerBulan = pokok/tenor;
+    const bungaPerBulan = pokok*i;
+    for(let k=1;k<=tenor;k++) list.push({ke:k, pokok:pokokPerBulan, bunga:bungaPerBulan, total:pokokPerBulan+bungaPerBulan});
+  } else if(jenis==='efektif'){
+    let sisa=pokok; const pokokPerBulan=pokok/tenor;
+    for(let k=1;k<=tenor;k++){
+      const bunga = sisa*i;
+      list.push({ke:k, pokok:pokokPerBulan, bunga, total:pokokPerBulan+bunga});
+      sisa -= pokokPerBulan;
+    }
+  } else { // anuitas
+    let sisa=pokok;
+    const angsuranTetap = i===0 ? pokok/tenor : pokok*i/(1-Math.pow(1+i,-tenor));
+    for(let k=1;k<=tenor;k++){
+      const bunga = sisa*i;
+      const pokokBln = angsuranTetap-bunga;
+      list.push({ke:k, pokok:pokokBln, bunga, total:angsuranTetap});
+      sisa -= pokokBln;
+    }
+  }
+  return list;
+}
+
+async function viewPembiayaanList(){
+  const {data} = await sb.from('pembiayaan').select('*, anggota:anggota_id(nama)').order('created_at',{ascending:false});
+  const rows=data||[];
+  const html = rows.length ? rows.map(p=>`
+    <div class="list-card" style="cursor:pointer" onclick="openPembiayaan('${p.id}')">
+      <div class="row"><div style="display:flex;align-items:center;gap:12px;">
+        <div class="ic-box" style="background:var(--coral-tint);color:var(--coral-dim);">▤</div>
+        <div><div class="title">${p.anggota?.nama||'-'}</div><div class="sub">${p.no_rekening} · ${fmtRp(p.pokok)}</div></div>
+      </div><span class="badge ${p.status}">${p.status.toUpperCase()}</span></div>
+    </div>`).join('') : `<div class="empty-box">Belum ada pembiayaan.</div>`;
+  return `<div class="rel">${backRow('Pembiayaan')}${isAdmin()?'<button class="fab" onclick="go(\'pembiayaan-baru\')">+</button>':''}</div>
+  <div class="search-box">🔍<input placeholder="Cari pembiayaan..." oninput="filterList(this,'.list-card')"></div>
+  ${html}`;
+}
+window.currentPembiayaanId=null;
+function openPembiayaan(id){ window.currentPembiayaanId=id; go('pembiayaan-detail'); }
+
+async function viewPembiayaanForm(){
+  const {data:anggotaList} = await sb.from('anggota').select('id,nama,no_anggota').order('nama');
+  const {count} = await sb.from('pembiayaan').select('*',{count:'exact',head:true});
+  const noRek = 'KR-' + todayISO().slice(2).replace(/-/g,'') + '-' + pad((count||0)+1,3);
+  const opts = (anggotaList||[]).map(a=>`<option value="${a.id}">${a.nama} (${a.no_anggota})</option>`).join('');
+  return `
+  ${backRow('Pembiayaan Baru')}
+  <div class="section-title">Pilih Anggota</div>
+  <div class="field"><label>ANGGOTA</label><select id="fAnggota"><option value="">— pilih anggota —</option>${opts}</select></div>
+  <div class="section-title">Detail Pinjaman</div>
+  <div class="field"><label>NO REKENING</label><input id="fNoRek" value="${noRek}"></div>
+  <div class="field"><label>POKOK PINJAMAN</label><div class="with-icon"><span class="fi">Rp</span>
+    <input id="fPokok" type="number" placeholder="0" oninput="previewAngsuran()"></div></div>
+  <div class="grid-2 tight">
+    <div class="field"><label>BUNGA %/THN</label><div class="with-icon"><span class="fi">%</span>
+      <input id="fBunga" type="number" placeholder="0" oninput="previewAngsuran()"></div></div>
+    <div class="field"><label>TENOR (BULAN)</label><div class="with-icon"><span class="fi">📅</span>
+      <input id="fTenor" type="number" placeholder="0" oninput="previewAngsuran()"></div></div>
+  </div>
+  <div style="font-weight:600;font-size:.8rem;color:var(--ink-dim);margin-bottom:8px;">Jenis Bunga</div>
+  <div class="chip-row">
+    <div class="chip active" id="chipFlat" onclick="setJenisBunga('flat')">Flat</div>
+    <div class="chip" id="chipEfektif" onclick="setJenisBunga('efektif')">Efektif</div>
+    <div class="chip" id="chipAnuitas" onclick="setJenisBunga('anuitas')">Anuitas</div>
+  </div>
+  <input type="hidden" id="fJenisBunga" value="flat">
+  <div class="field"><label>JAMINAN</label><div class="with-icon"><span class="fi">★</span><input id="fJaminan" placeholder="Jaminan"></div></div>
+  <div class="grid-2 tight">
+    <div class="field"><label>BIAYA ADM</label><input id="fAdm" type="number" value="0"></div>
+    <div class="field"><label>MATERAI</label><input id="fMaterai" type="number" value="0"></div>
+  </div>
+  <div id="previewBox"></div>
+  <button class="btn-primary" onclick="savePembiayaan()">💾 Simpan</button>
+  `;
+}
+function setJenisBunga(j){
+  document.getElementById('fJenisBunga').value=j;
+  ['Flat','Efektif','Anuitas'].forEach(x=>document.getElementById('chip'+x).classList.remove('active'));
+  document.getElementById('chip'+j[0].toUpperCase()+j.slice(1)).classList.add('active');
+  previewAngsuran();
+}
+function previewAngsuran(){
+  const pokok=Number(document.getElementById('fPokok').value||0);
+  const bunga=Number(document.getElementById('fBunga').value||0);
+  const tenor=Number(document.getElementById('fTenor').value||0);
+  const jenis=document.getElementById('fJenisBunga').value;
+  const box=document.getElementById('previewBox');
+  if(!pokok||!tenor){ box.innerHTML=''; return; }
+  const list=hitungAngsuran(pokok,bunga,tenor,jenis);
+  box.innerHTML = `<div class="note-box">Estimasi angsuran ke-1: <b>${fmtRp(list[0].total)}</b>/bulan
+    (pokok ${fmtRp(list[0].pokok)} + bunga ${fmtRp(list[0].bunga)}) selama ${tenor} bulan — jenis ${jenis}.</div>`;
+}
+async function savePembiayaan(){
+  const anggota_id=document.getElementById('fAnggota').value;
+  const no_rekening=document.getElementById('fNoRek').value.trim();
+  const pokok=Number(document.getElementById('fPokok').value||0);
+  const bunga_persen=Number(document.getElementById('fBunga').value||0);
+  const tenor_bulan=Number(document.getElementById('fTenor').value||0);
+  const jenis_bunga=document.getElementById('fJenisBunga').value;
+  const jaminan=document.getElementById('fJaminan').value.trim();
+  const biaya_adm=Number(document.getElementById('fAdm').value||0);
+  const materai=Number(document.getElementById('fMaterai').value||0);
+  if(!anggota_id){ toast('Pilih anggota', false); return; }
+  if(!pokok||!tenor_bulan){ toast('Pokok dan tenor wajib diisi', false); return; }
+
+  const {data:p,error} = await sb.from('pembiayaan').insert({
+    anggota_id, no_rekening, pokok, bunga_persen, tenor_bulan, jenis_bunga, jaminan, biaya_adm, materai
+  }).select().single();
+  if(error){ toast('Gagal simpan: '+error.message, false); return; }
+
+  const list=hitungAngsuran(pokok,bunga_persen,tenor_bulan,jenis_bunga);
+  const startDate=new Date();
+  const rows=list.map(a=>{
+    const due=new Date(startDate); due.setMonth(due.getMonth()+a.ke);
+    return { pembiayaan_id:p.id, ke:a.ke, tanggal_jatuh_tempo:due.toISOString().slice(0,10),
+      pokok:Math.round(a.pokok), bunga:Math.round(a.bunga), total:Math.round(a.pokok+a.bunga) };
+  });
+  await sb.from('angsuran').insert(rows);
+
+  await loadCoa();
+  const tgl=todayISO();
+  await postJurnal(tgl, `Pencairan pembiayaan ${no_rekening}`, 'Pinjaman Bulanan','Kas', pokok, 'pembiayaan');
+  if(biaya_adm>0) await postJurnal(tgl, `Biaya admin ${no_rekening}`, 'Kas','Pendapatan Administrasi', biaya_adm, 'pembiayaan');
+  if(materai>0) await postJurnal(tgl, `Materai ${no_rekening}`, 'Kas','Pendapatan Materai', materai, 'pembiayaan');
+
+  toast('Pembiayaan tersimpan ✔');
+  STACK=['beranda']; go('pembiayaan', false);
+}
+
+async function viewPembiayaanDetail(){
+  const id=window.currentPembiayaanId;
+  const {data:p} = await sb.from('pembiayaan').select('*, anggota:anggota_id(nama)').eq('id',id).single();
+  const {data:ang} = await sb.from('angsuran').select('*').eq('pembiayaan_id',id).order('ke');
+  if(!p) return `${backRow('Pembiayaan')}<div class="empty-box">Data tidak ditemukan</div>`;
+  await loadPengaturan();
+  const today=new Date();
+  const rows=(ang||[]).map(a=>{
+    let denda=0, late=0;
+    if(a.status==='belum'){
+      const due=new Date(a.tanggal_jatuh_tempo);
+      late = Math.floor((today-due)/86400000) - PENGATURAN.grace_period;
+      if(late>0){
+        denda = a.total*(PENGATURAN.denda_per_hari/100)*late;
+        const maxDenda = a.total*(PENGATURAN.maksimal_denda_persen/100);
+        denda = Math.min(denda, maxDenda);
+      }
+    }
+    return `<div class="sub-item"><span class="dot" style="background:${a.status==='lunas'?'var(--leaf)':(late>0?'var(--coral)':'var(--sage)')}"></span>
+      <div class="txt"><div class="t">Angsuran ke-${a.ke} — ${fmtRp(a.total)}</div>
+      <div class="s">Jatuh tempo ${fmtDate(a.tanggal_jatuh_tempo)} ${denda>0?`· denda ~${fmtRp(denda)}`:''}</div></div>
+      ${a.status==='belum' ? `<button class="small-btn" onclick="bayarAngsuran('${a.id}', ${Math.round(denda)})">Bayar</button>`
+        : `<span class="badge lunas">LUNAS</span>`}
+      </div>`;
+  }).join('');
+  return `
+  ${backRow(p.anggota?.nama||'Pembiayaan')}
+  <div class="list-card">
+    <div class="sub">No. Rekening</div><div class="title">${p.no_rekening}</div>
+    <hr class="sep" style="margin:12px 0">
+    <div class="grid-2 tight">
+      <div><div class="sub">Pokok</div><div class="title" style="font-size:.95rem;">${fmtRp(p.pokok)}</div></div>
+      <div><div class="sub">Bunga</div><div class="title" style="font-size:.95rem;">${p.bunga_persen}%/thn (${p.jenis_bunga})</div></div>
+    </div>
+    <div class="grid-2 tight" style="margin-top:10px;">
+      <div><div class="sub">Tenor</div><div class="title" style="font-size:.95rem;">${p.tenor_bulan} bulan</div></div>
+      <div><div class="sub">Jaminan</div><div class="title" style="font-size:.95rem;">${p.jaminan||'-'}</div></div>
+    </div>
+  </div>
+  <div class="section-title">Jadwal Angsuran</div>
+  <div class="list-card">${rows || '<div style="text-align:center;color:var(--ink-dim);">Belum ada jadwal</div>'}</div>
+  `;
+}
+async function bayarAngsuran(angsuranId, denda){
+  const {data:a} = await sb.from('angsuran').select('*, pembiayaan:pembiayaan_id(no_rekening)').eq('id',angsuranId).single();
+  if(!a) return;
+  await sb.from('angsuran').update({ status:'lunas', tanggal_bayar:todayISO(), denda }).eq('id',angsuranId);
+  await loadCoa();
+  const tgl=todayISO(); const ket=`Angsuran ke-${a.ke} ${a.pembiayaan?.no_rekening||''}`;
+  await postJurnal(tgl, ket, 'Kas','Pinjaman Bulanan', a.pokok, 'angsuran');
+  await postJurnal(tgl, ket+' (bunga)', 'Kas','Pendapatan Bunga Pinjaman Bulanan', a.bunga, 'angsuran');
+  if(denda>0) await postJurnal(tgl, ket+' (denda)', 'Kas','Pendapatan Denda Pinjaman Bulanan', denda, 'angsuran');
+  const {data:sisa} = await sb.from('angsuran').select('id').eq('pembiayaan_id',a.pembiayaan_id).eq('status','belum');
+  if(!sisa || sisa.length===0){ await sb.from('pembiayaan').update({status:'lunas'}).eq('id',a.pembiayaan_id); }
+  toast('Angsuran dibayar ✔');
+  render();
+}
+
+/* ======================================================================
+   DEPOSITO
+====================================================================== */
+async function viewDepositoList(){
+  const {data} = await sb.from('deposito').select('*, anggota:anggota_id(nama)').order('created_at',{ascending:false});
+  const rows=data||[];
+  const html = rows.length ? rows.map(d=>`
+    <div class="list-card"><div class="row"><div style="display:flex;align-items:center;gap:12px;">
+      <div class="ic-box" style="background:var(--coral-tint);color:var(--coral-dim);">◐</div>
+      <div><div class="title">${d.anggota?.nama||'-'}</div><div class="sub">${d.no_rekening} · ${d.bunga_persen}%/thn · ${d.tenor_bulan} bln</div></div>
+    </div><div style="font-size:1rem;font-weight:700;">${fmtRp(d.jumlah)}</div></div></div>`).join('')
+    : `<div class="empty-box">Belum ada deposito.</div>`;
+  return `<div class="rel">${backRow('Deposito')}<button class="fab" onclick="go('deposito-baru')">+</button></div>${html}`;
+}
+async function viewDepositoForm(){
+  const {data:anggotaList} = await sb.from('anggota').select('id,nama,no_anggota').order('nama');
+  const {count} = await sb.from('deposito').select('*',{count:'exact',head:true});
+  const noRek='DP-'+todayISO().slice(2).replace(/-/g,'')+'-'+pad((count||0)+1,3);
+  const opts=(anggotaList||[]).map(a=>`<option value="${a.id}">${a.nama} (${a.no_anggota})</option>`).join('');
+  return `${backRow('Deposito Baru')}
+  <div class="field"><label>ANGGOTA</label><select id="fAnggota"><option value="">— pilih anggota —</option>${opts}</select></div>
+  <div class="field"><label>NO REKENING</label><input id="fNoRek" value="${noRek}"></div>
+  <div class="field"><label>JUMLAH DEPOSITO</label><div class="with-icon"><span class="fi">Rp</span><input id="fJumlah" type="number" placeholder="0"></div></div>
+  <div class="grid-2 tight">
+    <div class="field"><label>BUNGA %/THN</label><input id="fBunga" type="number" placeholder="0"></div>
+    <div class="field"><label>TENOR (BULAN)</label><input id="fTenor" type="number" placeholder="0"></div>
+  </div>
+  <button class="btn-primary" onclick="saveDeposito()">💾 Simpan</button>`;
+}
+async function saveDeposito(){
+  const anggota_id=document.getElementById('fAnggota').value;
+  const no_rekening=document.getElementById('fNoRek').value.trim();
+  const jumlah=Number(document.getElementById('fJumlah').value||0);
+  const bunga_persen=Number(document.getElementById('fBunga').value||0);
+  const tenor_bulan=Number(document.getElementById('fTenor').value||0);
+  if(!anggota_id||!jumlah||!tenor_bulan){ toast('Lengkapi data', false); return; }
+  const due=new Date(); due.setMonth(due.getMonth()+tenor_bulan);
+  const {error} = await sb.from('deposito').insert({ anggota_id, no_rekening, jumlah, bunga_persen, tenor_bulan,
+    tanggal_jatuh_tempo: due.toISOString().slice(0,10) });
+  if(error){ toast('Gagal simpan: '+error.message, false); return; }
+  await loadCoa();
+  await postJurnal(todayISO(), `Setoran deposito ${no_rekening}`, 'Kas','Deposito', jumlah, 'deposito');
+  toast('Deposito tersimpan ✔'); STACK=['beranda']; go('deposito', false);
+}
+
+/* ======================================================================
+   PENGELUARAN
+====================================================================== */
+async function viewPengeluaranList(){
+  const {data} = await sb.from('pengeluaran').select('*, akun:akun_id(nama,kode)').order('tanggal',{ascending:false}).limit(50);
+  const rows=data||[];
+  const html = rows.length ? rows.map(p=>`
+    <div class="list-card"><div class="row"><div>
+      <div class="title">${p.akun?.nama||'-'}</div><div class="sub">${fmtDate(p.tanggal)} ${p.keterangan?('· '+p.keterangan):''}</div>
+    </div><div style="font-size:1rem;font-weight:700;color:var(--coral-dim);">-${fmtRp(p.jumlah)}</div></div></div>`).join('')
+    : `<div class="empty-box">Belum ada pengeluaran.</div>`;
+  return `<div class="rel">${backRow('Pengeluaran')}<button class="fab" onclick="go('pengeluaran-baru')">+</button></div>${html}`;
+}
+async function viewPengeluaranForm(){
+  await loadCoa();
+  const biayaAkun = COA_CACHE.list.filter(a=>a.kategori==='biaya');
+  const opts=biayaAkun.map(a=>`<option value="${a.id}">${a.kode} — ${a.nama}</option>`).join('');
+  return `${backRow('Pengeluaran Baru')}
+  <div class="field"><label>TANGGAL</label><input id="fTanggal" type="date" value="${todayISO()}"></div>
+  <div class="field"><label>AKUN BIAYA</label><select id="fAkun">${opts}</select></div>
+  <div class="field"><label>JUMLAH</label><div class="with-icon"><span class="fi">Rp</span><input id="fJumlah" type="number" placeholder="0"></div></div>
+  <div class="field"><label>KETERANGAN</label><input id="fKet" placeholder="Keterangan"></div>
+  <button class="btn-primary" onclick="savePengeluaran()">💾 Simpan</button>`;
+}
+async function savePengeluaran(){
+  const tanggal=document.getElementById('fTanggal').value;
+  const akun_id=document.getElementById('fAkun').value;
+  const jumlah=Number(document.getElementById('fJumlah').value||0);
+  const keterangan=document.getElementById('fKet').value.trim();
+  if(!akun_id||!jumlah){ toast('Lengkapi data', false); return; }
+  await sb.from('pengeluaran').insert({ tanggal, akun_id, jumlah, keterangan });
+  const akun = COA_CACHE.byId[akun_id];
+  await postJurnal(tanggal, keterangan||`Pengeluaran ${akun.nama}`, akun.nama, 'Kas', jumlah, 'pengeluaran');
+  toast('Pengeluaran tersimpan ✔'); STACK=['beranda']; go('pengeluaran', false);
+}
+
+/* ======================================================================
+   JURNAL UMUM
+====================================================================== */
+async function viewJurnalList(){
+  const {data} = await sb.from('jurnal').select('*, debit:akun_debit_id(nama,kode), kredit:akun_kredit_id(nama,kode)')
+    .order('tanggal',{ascending:false}).order('created_at',{ascending:false}).limit(80);
+  const rows=data||[];
+  const html = rows.length ? rows.map(j=>`
+    <div class="list-card">
+      <div class="sub">${fmtDate(j.tanggal)} ${j.keterangan?('· '+j.keterangan):''}</div>
+      <div class="row" style="margin-top:8px;">
+        <div style="font-size:.85rem;"><span class="badge debit">D</span> ${j.debit?.nama||'-'}</div>
+        <div style="font-size:1rem;font-weight:700;">${fmtRp(j.jumlah)}</div>
+      </div>
+      <div style="font-size:.85rem;margin-top:4px;"><span class="badge kredit">K</span> ${j.kredit?.nama||'-'}</div>
+    </div>`).join('') : `<div class="empty-box">Belum ada jurnal.</div>`;
+  return `<div class="rel">${backRow('Jurnal Umum')}<button class="fab" onclick="go('jurnal-baru')">+</button></div>${html}`;
+}
+async function viewJurnalForm(){
+  await loadCoa();
+  const opts=COA_CACHE.list.map(a=>`<option value="${a.id}">${a.kode} — ${a.nama}</option>`).join('');
+  return `${backRow('Jurnal Baru')}
+  <div class="field"><label>TANGGAL</label><input id="fTanggal" type="date" value="${todayISO()}"></div>
+  <div class="field"><label>KETERANGAN</label><input id="fKet" placeholder="Keterangan"></div>
+  <div class="field"><label>AKUN DEBIT</label><select id="fDebit">${opts}</select></div>
+  <div class="field"><label>AKUN KREDIT</label><select id="fKredit">${opts}</select></div>
+  <div class="field"><label>JUMLAH</label><div class="with-icon"><span class="fi">Rp</span><input id="fJumlah" type="number" placeholder="0"></div></div>
+  <button class="btn-primary" onclick="saveJurnal()">💾 Simpan</button>`;
+}
+async function saveJurnal(){
+  const tanggal=document.getElementById('fTanggal').value;
+  const keterangan=document.getElementById('fKet').value.trim();
+  const akun_debit_id=document.getElementById('fDebit').value;
+  const akun_kredit_id=document.getElementById('fKredit').value;
+  const jumlah=Number(document.getElementById('fJumlah').value||0);
+  if(!jumlah || akun_debit_id===akun_kredit_id){ toast('Periksa akun & jumlah', false); return; }
+  await sb.from('jurnal').insert({ tanggal, keterangan, akun_debit_id, akun_kredit_id, jumlah, sumber:'manual' });
+  toast('Jurnal tersimpan ✔'); STACK=['beranda']; go('jurnal', false);
+}
+
+/* ======================================================================
+   DAFTAR AKUN (COA)
+====================================================================== */
+const KATEGORI_LABEL={aktiva_lancar:'AKTIVA LANCAR',aktiva_tetap:'AKTIVA TETAP',kewajiban_pendek:'KEWAJIBAN JANGKA PENDEK',
+  kewajiban_panjang:'KEWAJIBAN JANGKA PANJANG',modal:'MODAL/EQUITY',pendapatan:'PENDAPATAN',biaya:'BIAYA'};
+async function viewCoaList(){
+  await loadCoa();
+  const order=['aktiva_lancar','aktiva_tetap','kewajiban_pendek','kewajiban_panjang','modal','pendapatan','biaya'];
+  let html='';
+  order.forEach(kat=>{
+    const items=COA_CACHE.list.filter(a=>a.kategori===kat);
+    if(!items.length) return;
+    html += `<div class="section-title">${KATEGORI_LABEL[kat]}</div>`;
+    html += items.map(a=>`<div class="list-card"><div class="row">
+      <div><div class="title" style="font-size:.9rem;">${a.nama}</div><div class="sub">${a.kode}</div></div>
+      <span class="badge ${a.tipe_normal}">${a.tipe_normal.toUpperCase()}</span>
+    </div></div>`).join('');
+  });
+  return `<div class="rel">${backRow('Daftar Akun (COA)')}<button class="fab" onclick="go('coa-baru')">+</button></div>${html}`;
+}
+async function viewCoaForm(){
+  return `${backRow('Akun Baru')}
+  <div class="field"><label>KODE AKUN</label><input id="fKode" placeholder="mis. 5541011006"></div>
+  <div class="field"><label>NAMA AKUN</label><input id="fNama" placeholder="Nama Akun"></div>
+  <div class="field"><label>KATEGORI</label><select id="fKategori">
+    <option value="aktiva_lancar">Aktiva Lancar</option><option value="aktiva_tetap">Aktiva Tetap</option>
+    <option value="kewajiban_pendek">Kewajiban Jangka Pendek</option><option value="kewajiban_panjang">Kewajiban Jangka Panjang</option>
+    <option value="modal">Modal/Equity</option><option value="pendapatan">Pendapatan</option><option value="biaya">Biaya</option>
+  </select></div>
+  <div style="font-weight:600;font-size:.8rem;color:var(--ink-dim);margin-bottom:8px;">Tipe Normal</div>
+  <div class="chip-row"><div class="chip active" id="chipDebit" onclick="setTipeAkun('debit')">Debit</div>
+  <div class="chip" id="chipKredit" onclick="setTipeAkun('kredit')">Kredit</div></div>
+  <input type="hidden" id="fTipe" value="debit">
+  <button class="btn-primary" onclick="saveCoa()">💾 Simpan</button>`;
+}
+function setTipeAkun(t){ document.getElementById('fTipe').value=t;
+  document.getElementById('chipDebit').classList.toggle('active', t==='debit');
+  document.getElementById('chipKredit').classList.toggle('active', t==='kredit'); }
+async function saveCoa(){
+  const kode=document.getElementById('fKode').value.trim();
+  const nama=document.getElementById('fNama').value.trim();
+  const kategori=document.getElementById('fKategori').value;
+  const tipe_normal=document.getElementById('fTipe').value;
+  if(!kode||!nama){ toast('Lengkapi data', false); return; }
+  const {error} = await sb.from('coa').insert({ kode, nama, kategori, tipe_normal });
+  if(error){ toast('Gagal simpan: '+error.message, false); return; }
+  toast('Akun tersimpan ✔'); STACK=['beranda']; go('coa', false);
+}
+
+/* ======================================================================
+   LAPORAN
+====================================================================== */
+async function viewLaporanMenu(){
+  return `${backRow('Laporan')}
+  <div class="section-title">Laporan Keuangan</div>
+  <button class="menu-item" onclick="go('laporan-neraca')"><span class="row"><span class="ic">🏛</span><span><div class="label">Neraca</div><div class="sub">Laporan posisi keuangan</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-labarugi')"><span class="row"><span class="ic">📈</span><span><div class="label">Laba Rugi</div><div class="sub">Laporan hasil usaha periode</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-bukubesar')"><span class="row"><span class="ic">📖</span><span><div class="label">Buku Besar</div><div class="sub">Mutasi per akun</div></span></span><span class="chev">›</span></button>
+  <div class="section-title">Laporan Tabungan</div>
+  <button class="menu-item" onclick="go('laporan-mutasitabungan')"><span class="row"><span class="ic">🏦</span><span><div class="label">Mutasi Tabungan</div><div class="sub">Riwayat transaksi per rekening</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-rekapsaldo')"><span class="row"><span class="ic">💰</span><span><div class="label">Rekap Saldo</div><div class="sub">Total saldo semua rekening</div></span></span><span class="chev">›</span></button>
+  <div class="section-title">Laporan Pembiayaan</div>
+  <button class="menu-item" onclick="go('laporan-riwayatangsuran')"><span class="row"><span class="ic">📋</span><span><div class="label">Riwayat Angsuran</div><div class="sub">Riwayat angsuran per pinjaman</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-klasifikasi')"><span class="row"><span class="ic">🏷</span><span><div class="label">Klasifikasi Kredit</div><div class="sub">Status pinjaman (Aktif/Lunas/Macet)</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-jatuhtempo')"><span class="row"><span class="ic">⏰</span><span><div class="label">Jatuh Tempo</div><div class="sub">Angsuran yang akan jatuh tempo</div></span></span><span class="chev">›</span></button>
+  <button class="menu-item" onclick="go('laporan-skorkredit')"><span class="row"><span class="ic">🎯</span><span><div class="label">Skor Kredit</div><div class="sub">Penilaian kelayakan pinjaman</div></span></span><span class="chev">›</span></button>
+  `;
+}
+function reportToolbar(){
+  return `<div class="btn-row" style="margin-bottom:20px;">
+    <button class="btn-secondary" style="flex:1;" onclick="render()">↻ Load</button>
+    <button class="btn-secondary" style="flex:1;" onclick="toast('Export akan mengunduh data sebagai CSV pada versi mendatang')">⬇ Export</button>
+    <button class="btn-secondary" style="flex:1;" onclick="window.print()">🖨 Print</button>
+  </div>`;
+}
+
+async function viewNeraca(){
+  await loadCoa();
+  const bal = await computeCoaBalances();
+  const cat=(k)=>COA_CACHE.list.filter(a=>a.kategori===k).map(a=>({nama:a.nama, v:bal[a.id]||0}));
+  const line=(o)=>`<div class="report-line"><span>${o.nama}</span><span>${fmtRp(o.v)}</span></div>`;
+  const aktivaLancar=cat('aktiva_lancar'), aktivaTetap=cat('aktiva_tetap');
+  const kwjPendek=cat('kewajiban_pendek'), kwjPanjang=cat('kewajiban_panjang'), modal=cat('modal');
+  const totalAktiva = [...aktivaLancar,...aktivaTetap].reduce((s,x)=>s+x.v,0);
+  const totalPassiva = [...kwjPendek,...kwjPanjang,...modal].reduce((s,x)=>s+x.v,0);
+  return `${backRow('Neraca')}${reportToolbar()}
+  <div class="report-card">
+    <div class="grp">AKTIVA</div>
+    <div class="sub-grp">AKTIVA LANCAR</div>${aktivaLancar.map(line).join('')}
+    <div class="sub-grp">AKTIVA TETAP</div>${aktivaTetap.map(line).join('')}
+    <div class="grp">PASSIVA</div>
+    <div class="sub-grp">KEWAJIBAN JANGKA PENDEK</div>${kwjPendek.map(line).join('')}
+    <div class="sub-grp">KEWAJIBAN JANGKA PANJANG</div>${kwjPanjang.map(line).join('')}
+    <div class="sub-grp">MODAL/EQUITY</div>${modal.map(line).join('')}
+    <div class="report-line total"><span>TOTAL AKTIVA</span><span>${fmtRp(totalAktiva)}</span></div>
+    <div class="report-line total"><span>TOTAL PASSIVA</span><span>${fmtRp(totalPassiva)}</span></div>
+  </div>`;
+}
+
+async function viewLabaRugi(){
+  await loadCoa();
+  const bal = await computeCoaBalances();
+  const pendapatan = COA_CACHE.list.filter(a=>a.kategori==='pendapatan').map(a=>({nama:a.nama, v:bal[a.id]||0}));
+  const biaya = COA_CACHE.list.filter(a=>a.kategori==='biaya').map(a=>({nama:a.nama, v:bal[a.id]||0}));
+  const totalPendapatan = pendapatan.reduce((s,x)=>s+x.v,0);
+  const totalBiaya = biaya.reduce((s,x)=>s+x.v,0);
+  const shu = totalPendapatan - totalBiaya;
+  return `${backRow('Laba Rugi')}${reportToolbar()}
+  <div class="report-card">
+    <div class="grp">PENDAPATAN</div>
+    ${pendapatan.map(p=>`<div class="report-line"><span>${p.nama}</span><span>${fmtRp(p.v)}</span></div>`).join('')}
+    <div class="grp biaya">BIAYA</div>
+    ${biaya.map(b=>`<div class="report-line"><span>${b.nama}</span><span class="neg">(${fmtRp(b.v)})</span></div>`).join('')}
+    <div class="report-line total"><span>SHU</span><span class="${shu>=0?'pos':'neg'}">${fmtRp(shu)}</span></div>
+  </div>`;
+}
+
+async function viewBukuBesar(){
+  await loadCoa();
+  const opts=COA_CACHE.list.map(a=>`<option value="${a.id}">${a.kode} — ${a.nama}</option>`).join('');
+  const selectedId = window._bbAkun || (COA_CACHE.list[0] && COA_CACHE.list[0].id);
+  window._bbAkun = selectedId;
+  const {data:rows} = await sb.from('jurnal').select('*, debit:akun_debit_id(nama), kredit:akun_kredit_id(nama)')
+    .or(`akun_debit_id.eq.${selectedId},akun_kredit_id.eq.${selectedId}`).order('tanggal');
+  const akun=COA_CACHE.byId[selectedId];
+  let saldo=0;
+  const lines=(rows||[]).map(r=>{
+    const isDebit = r.akun_debit_id===selectedId;
+    const amt = isDebit? Number(r.jumlah) : -Number(r.jumlah);
+    saldo += akun.tipe_normal==='debit' ? amt : -amt;
+    return `<div class="report-line"><span>${fmtDate(r.tanggal)} ${r.keterangan||''} ${isDebit?'(D)':'(K)'}</span><span>${fmtRp(saldo)}</span></div>`;
+  }).join('');
+  return `${backRow('Buku Besar')}
+  <div class="field"><label>PILIH AKUN</label><select id="bbAkunSelect" onchange="window._bbAkun=this.value; render();">${opts}</select></div>
+  <script>document.getElementById('bbAkunSelect').value='${selectedId}';</script>
+  <div class="report-card"><div class="grp">${akun?akun.nama:''}</div>
+    ${lines || '<div style="text-align:center;color:var(--ink-dim);font-weight:400;">Belum ada mutasi</div>'}
+    <div class="report-line total"><span>SALDO AKHIR</span><span>${fmtRp(saldo)}</span></div>
+  </div>`;
+}
+
+async function viewMutasiTabungan(){
+  const {data:rek} = await sb.from('rekening_tabungan').select('id,no_rekening,anggota:anggota_id(nama)').order('created_at',{ascending:false});
+  const opts=(rek||[]).map(r=>`<option value="${r.id}">${r.no_rekening} — ${r.anggota?.nama||''}</option>`).join('');
+  const selectedId = window._mtRek || (rek&&rek[0]&&rek[0].id);
+  window._mtRek = selectedId;
+  let tx=[];
+  if(selectedId){ const {data} = await sb.from('tabungan_transaksi').select('*').eq('rekening_id',selectedId).order('tanggal',{ascending:false}); tx=data||[]; }
+  return `${backRow('Mutasi Tabungan')}
+  <div class="field"><label>PILIH REKENING</label><select id="mtSelect" onchange="window._mtRek=this.value; render();">${opts}</select></div>
+  <script>if(document.getElementById('mtSelect')) document.getElementById('mtSelect').value='${selectedId||''}';</script>
+  ${tx.length? tx.map(t=>`<div class="list-card"><div class="row">
+    <div><div class="title" style="font-size:.9rem;">${t.jenis==='setor'?'Setor':'Tarik'}</div><div class="sub">${fmtDate(t.tanggal)}</div></div>
+    <div style="font-weight:700;">${fmtRp(t.jumlah)}</div></div></div>`).join('') : `<div class="empty-box">Belum ada mutasi</div>`}
+  `;
+}
+
+async function viewRekapSaldo(){
+  const {data:rek} = await sb.from('rekening_tabungan').select('*, anggota:anggota_id(nama)').order('saldo',{ascending:false});
+  const rows=rek||[];
+  const total=rows.reduce((s,r)=>s+Number(r.saldo||0),0);
+  return `${backRow('Rekap Saldo')}
+  <div class="report-card">
+    ${rows.map(r=>`<div class="report-line"><span>${r.anggota?.nama||'-'} (${r.no_rekening})</span><span>${fmtRp(r.saldo)}</span></div>`).join('') || '<div style="text-align:center;color:var(--ink-dim);">Belum ada data</div>'}
+    <div class="report-line total"><span>TOTAL SALDO</span><span>${fmtRp(total)}</span></div>
+  </div>`;
+}
+
+async function viewRiwayatAngsuran(){
+  const {data} = await sb.from('angsuran').select('*, pembiayaan:pembiayaan_id(no_rekening, anggota:anggota_id(nama))')
+    .order('tanggal_jatuh_tempo',{ascending:false}).limit(100);
+  const rows=data||[];
+  return `${backRow('Riwayat Angsuran')}
+  ${rows.length? rows.map(a=>`<div class="list-card"><div class="row">
+    <div><div class="title" style="font-size:.9rem;">${a.pembiayaan?.anggota?.nama||'-'} — ke-${a.ke}</div>
+    <div class="sub">${a.pembiayaan?.no_rekening||''} · JT ${fmtDate(a.tanggal_jatuh_tempo)}</div></div>
+    <span class="badge ${a.status}">${a.status.toUpperCase()}</span></div></div>`).join('') : `<div class="empty-box">Belum ada data</div>`}
+  `;
+}
+
+async function viewKlasifikasiKredit(){
+  const {data} = await sb.from('pembiayaan').select('*, anggota:anggota_id(nama), angsuran(status,tanggal_jatuh_tempo)');
+  const rows=data||[];
+  const today=new Date();
+  const klas=(p)=>{
+    if(p.status==='lunas') return {label:'LUNAS', cls:'lunas'};
+    const belum=(p.angsuran||[]).filter(a=>a.status==='belum');
+    let maxLate=0;
+    belum.forEach(a=>{ const d=Math.floor((today-new Date(a.tanggal_jatuh_tempo))/86400000); if(d>maxLate) maxLate=d; });
+    if(maxLate<=0) return {label:'LANCAR', cls:'aktif'};
+    if(maxLate<=90) return {label:'KURANG LANCAR', cls:'belum'};
+    if(maxLate<=180) return {label:'DIRAGUKAN', cls:'belum'};
+    return {label:'MACET', cls:'macet'};
+  };
+  return `${backRow('Klasifikasi Kredit')}
+  ${rows.length? rows.map(p=>{ const k=klas(p); return `<div class="list-card"><div class="row">
+    <div><div class="title" style="font-size:.9rem;">${p.anggota?.nama||'-'}</div><div class="sub">${p.no_rekening} · ${fmtRp(p.pokok)}</div></div>
+    <span class="badge ${k.cls}">${k.label}</span></div></div>`; }).join('') : `<div class="empty-box">Belum ada pembiayaan</div>`}
+  `;
+}
+
+async function viewJatuhTempoReport(){
+  const {data} = await sb.from('angsuran').select('*, pembiayaan:pembiayaan_id(no_rekening, anggota:anggota_id(nama))')
+    .eq('status','belum').order('tanggal_jatuh_tempo').limit(100);
+  const rows=data||[];
+  const today=new Date();
+  return `${backRow('Jatuh Tempo')}
+  ${rows.length? rows.map(a=>{ const late=Math.floor((today-new Date(a.tanggal_jatuh_tempo))/86400000);
+    return `<div class="list-card"><div class="row">
+    <div><div class="title" style="font-size:.9rem;">${a.pembiayaan?.anggota?.nama||'-'} — ke-${a.ke}</div>
+    <div class="sub">${a.pembiayaan?.no_rekening||''} · JT ${fmtDate(a.tanggal_jatuh_tempo)} ${late>0?`· telat ${late} hari`:''}</div></div>
+    <div style="font-weight:700;">${fmtRp(a.total)}</div></div></div>`; }).join('') : `<div class="empty-box">Tidak ada angsuran jatuh tempo</div>`}
+  `;
+}
+
+async function viewSkorKredit(){
+  const {data} = await sb.from('anggota').select('id,nama,pembiayaan(id,status,angsuran(status,tanggal_bayar,tanggal_jatuh_tempo))');
+  const rows=(data||[]).filter(a=>a.pembiayaan && a.pembiayaan.length);
+  const score=(a)=>{
+    let total=0, tepat=0;
+    a.pembiayaan.forEach(p=>(p.angsuran||[]).forEach(ang=>{
+      if(ang.status==='lunas'){ total++; if(ang.tanggal_bayar && new Date(ang.tanggal_bayar)<=new Date(ang.tanggal_jatuh_tempo)) tepat++; }
+    }));
+    if(total===0) return 70;
+    return Math.round((tepat/total)*100);
+  };
+  return `${backRow('Skor Kredit')}
+  ${rows.length? rows.map(a=>{ const s=score(a);
+    const cls = s>=80?'aktif':(s>=50?'belum':'macet');
+    return `<div class="list-card"><div class="row"><div class="title" style="font-size:.9rem;">${a.nama}</div>
+    <span class="badge ${cls}">${s}/100</span></div></div>`; }).join('') : `<div class="empty-box">Belum ada data pembiayaan</div>`}
+  `;
+}
+
+/* ======================================================================
+   PENGATURAN
+====================================================================== */
+window._pgTab='denda';
+async function viewPengaturan(tab){
+  await loadPengaturan();
+  window._pgTab = tab || window._pgTab || 'denda';
+  const t=window._pgTab;
+  let body='';
+  if(t==='denda'){
+    body = `
+    <div class="field"><label>DENDA PER HARI</label><div class="with-icon"><span class="fi">⚖</span>
+      <input id="pDenda" type="number" step="0.1" value="${PENGATURAN.denda_per_hari}">
+      <span class="field-suffix">% / hari</span></div></div>
+    <div class="field"><label>GRACE PERIOD</label><div class="with-icon"><span class="fi">🕐</span>
+      <input id="pGrace" type="number" value="${PENGATURAN.grace_period}"><span class="field-suffix">hari</span></div></div>
+    <div class="field"><label>MAKSIMAL DENDA</label><div class="with-icon"><span class="fi">📈</span>
+      <input id="pMaks" type="number" value="${PENGATURAN.maksimal_denda_persen}"><span class="field-suffix">% dari angsuran</span></div></div>
+    <div class="note-box">Contoh:<br>Angsuran Rp 1jt, telat 10 hari &rarr; denda ${PENGATURAN.denda_per_hari}% x 10 hari (Rp ${Math.round(1000000*PENGATURAN.denda_per_hari/100*10).toLocaleString('id-ID')})<br>
+    Maksimal denda: ${PENGATURAN.maksimal_denda_persen}% dari pokok angsuran</div>
+    <button class="btn-primary" onclick="savePengaturanDenda()">💾 Simpan Pengaturan</button>`;
+  } else if(t==='umum'){
+    body = `
+    <div class="field"><label>NAMA KOPERASI</label><input id="pNama" value="${PENGATURAN.nama_koperasi||''}"></div>
+    <div class="field"><label>TAGLINE</label><input id="pTagline" value="${PENGATURAN.tagline||''}"></div>
+    <button class="btn-primary" onclick="savePengaturanUmum()">💾 Simpan Pengaturan</button>`;
+  } else if(t==='pengguna'){
+    const {data:users} = await sb.from('users').select('*, anggota:anggota_id(nama)').order('created_at',{ascending:false});
+    const {data:anggotaList} = await sb.from('anggota').select('id,nama,no_anggota').order('nama');
+    const optsAnggota=(anggotaList||[]).map(a=>`<option value="${a.id}">${a.nama} (${a.no_anggota})</option>`).join('');
+    body = `
+    <div class="section-title">Tambah Pengguna</div>
+    <div class="field"><label>NAMA</label><input id="uNama" placeholder="Nama lengkap"></div>
+    <div class="field"><label>USERNAME</label><input id="uUsername" placeholder="username"></div>
+    <div class="field"><label>PASSWORD</label><input id="uPassword" type="text" placeholder="password"></div>
+    <div class="field"><label>ROLE</label><select id="uRole" onchange="document.getElementById('uAnggotaWrap').style.display=this.value==='nasabah'?'block':'none';">
+      <option value="admin">Admin</option><option value="penagihan">Penagihan</option><option value="nasabah">Nasabah</option>
+    </select></div>
+    <div id="uAnggotaWrap" style="display:none;" class="field"><label>LINK KE ANGGOTA</label>
+      <select id="uAnggota"><option value="">— pilih anggota —</option>${optsAnggota}</select></div>
+    <button class="btn-primary" onclick="saveUser()">💾 Tambah Pengguna</button>
+    <div class="section-title">Daftar Pengguna</div>
+    ${(users&&users.length)? users.map(u=>`<div class="list-card"><div class="row">
+      <div><div class="title" style="font-size:.92rem;">${u.nama} <span class="badge ${u.role}" style="margin-left:4px;">${u.role.toUpperCase()}</span></div>
+      <div class="sub">@${u.username} ${u.anggota?('· terhubung: '+u.anggota.nama):''}</div></div>
+      <button class="small-btn danger" onclick="deleteUser('${u.id}')">Hapus</button></div></div>`).join('') : `<div class="empty-box">Belum ada pengguna lain</div>`}
+    `;
+  } else {
+    body = `
+    <div class="field"><label>SUPABASE PROJECT URL</label><input id="pUrl" value="${localStorage.getItem(LS_URL)||''}"></div>
+    <div class="field"><label>SUPABASE ANON KEY</label><input id="pKey" value="${localStorage.getItem(LS_KEY)||''}"></div>
+    <button class="btn-primary" onclick="savePengaturanDb()">💾 Simpan &amp; Hubungkan Ulang</button>
+    <div class="note-box">Jalankan <b>schema.sql</b> sekali di SQL Editor project Supabase kamu sebelum menghubungkan.</div>`;
+  }
+  return `${backRow('Pengaturan')}
+  <div class="tabs">
+    <button class="tab-btn ${t==='denda'?'active':''}" onclick="switchPgTab('denda')">⚖<span>Denda</span></button>
+    <button class="tab-btn ${t==='umum'?'active':''}" onclick="switchPgTab('umum')">⚙<span>Umum</span></button>
+    <button class="tab-btn ${t==='pengguna'?'active':''}" onclick="switchPgTab('pengguna')">☺<span>Pengguna</span></button>
+    <button class="tab-btn ${t==='database'?'active':''}" onclick="switchPgTab('database')">🗄<span>Database</span></button>
+  </div>
+  ${body}`;
+}
+async function switchPgTab(tab){ window._pgTab=tab; const html=await viewPengaturan(tab); document.getElementById('app').innerHTML=html+navBar(); }
+async function savePengaturanDenda(){
+  const denda_per_hari=Number(document.getElementById('pDenda').value||0);
+  const grace_period=Number(document.getElementById('pGrace').value||0);
+  const maksimal_denda_persen=Number(document.getElementById('pMaks').value||0);
+  await sb.from('pengaturan').update({ denda_per_hari, grace_period, maksimal_denda_persen }).eq('id',1);
+  toast('Pengaturan tersimpan ✔'); render();
+}
+async function savePengaturanUmum(){
+  const nama_koperasi=document.getElementById('pNama').value.trim();
+  const tagline=document.getElementById('pTagline').value.trim();
+  await sb.from('pengaturan').update({ nama_koperasi, tagline }).eq('id',1);
+  toast('Pengaturan tersimpan ✔'); render();
+}
+async function savePengaturanDb(){
+  const url=document.getElementById('pUrl').value.trim();
+  const key=document.getElementById('pKey').value.trim();
+  localStorage.setItem(LS_URL,url); localStorage.setItem(LS_KEY,key);
+  initSupabase(); toast('Koneksi database diperbarui ✔'); render();
+}
+async function saveUser(){
+  const nama=document.getElementById('uNama').value.trim();
+  const username=document.getElementById('uUsername').value.trim();
+  const password=document.getElementById('uPassword').value;
+  const role=document.getElementById('uRole').value;
+  const anggota_id = role==='nasabah' ? (document.getElementById('uAnggota').value||null) : null;
+  if(!nama||!username||!password){ toast('Lengkapi data', false); return; }
+  const {error} = await sb.from('users').insert({ nama, username, password, role, anggota_id });
+  if(error){ toast('Gagal simpan: '+error.message, false); return; }
+  toast('Pengguna ditambahkan ✔');
+  const html=await viewPengaturan('pengguna'); document.getElementById('app').innerHTML=html+navBar();
+}
+async function deleteUser(id){
+  const session=getSession();
+  if(session && session.id===id){ toast('Tidak bisa menghapus akun sendiri', false); return; }
+  await sb.from('users').delete().eq('id',id);
+  toast('Pengguna dihapus ✔');
+  const html=await viewPengaturan('pengguna'); document.getElementById('app').innerHTML=html+navBar();
+}
+
+/* ======================================================================
+   UTIL
+====================================================================== */
+function filterList(input, selector){
+  const q=input.value.toLowerCase();
+  document.querySelectorAll(selector).forEach(el=>{
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+/* boot */
+render();
+</script>
+</body>
+</html>
